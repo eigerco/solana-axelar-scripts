@@ -1,5 +1,5 @@
 [package]
-name = "scripts"
+name = "script"
 version = "0.1.0"
 edition = "2021"
 
@@ -17,19 +17,20 @@ unused_must_use = "deny"
 
 [dependencies]
 # Our crates
-axelar-executable-old = { git = "https://github.com/eigerco/axelar-solan-internal.git", branch = "validate-message-refactor" }
-axelar-rkyv-encoding = { git = "https://github.com/eigerco/axelar-solan-internal.git", branch = "validate-message-refactor" }
-axelar-solana-memo-program = { git = "https://github.com/eigerco/axelar-solan-internal.git", branch = "validate-message-refactor" }
-evm-contracts-test-suite = { git = "https://github.com/eigerco/axelar-solan-internal.git", branch = "validate-message-refactor" }
-axelra-message-primitives = { git = "https://github.com/eigerco/axelar-solan-internal.git", branch = "validate-message-refactor" }
-gmp-gateway = { git = "https://github.com/eigerco/axelar-solan-internal.git", branch = "validate-message-refactor" }
-test-fixtures = { git = "https://github.com/eigerco/axelar-solan-internal.git", branch = "validate-message-refactor" }
+axelar-executable-old = { git = "https://github.com/eigerco/solana-axelar-internal.git", branch = "clean-up-xtask" }
+axelar-rkyv-encoding = { git = "https://github.com/eigerco/solana-axelar-internal.git", branch = "clean-up-xtask" }
+axelar-solana-memo-program = { git = "https://github.com/eigerco/solana-axelar-internal.git", branch = "clean-up-xtask" }
+evm-contracts-test-suite = { git = "https://github.com/eigerco/solana-axelar-internal.git", branch = "clean-up-xtask" }
+axelar-message-primitives = { git = "https://github.com/eigerco/solana-axelar-internal.git", branch = "clean-up-xtask" }
+gmp-gateway = { git = "https://github.com/eigerco/solana-axelar-internal.git", branch = "clean-up-xtask" }
+test-fixtures = { git = "https://github.com/eigerco/solana-axelar-internal.git", branch = "clean-up-xtask" }
 
 # Amplifier crates
 gateway = { path = "../../axelar-amplifier/contracts/gateway", features = ["library"] }
 gateway-api = { path = "../../axelar-amplifier/packages/gateway-api" }
 multisig = { path = "../../axelar-amplifier/contracts/multisig", features = ["library"] }
 router-api = { path = "../../axelar-amplifier/packages/router-api" }
+axelar-wasm-std = { path = "../../axelar-amplifier/packages/axelar-wasm-std" }
 voting-verifier = { path = "../../axelar-amplifier/contracts/voting-verifier", features = ["library"] }
 
 # Util crates
@@ -63,16 +64,20 @@ serde = "1"
 serde_json = "1"
 simd-json = "0.13"
 solana-cli-config = "2.0.1"
-solana-client = "2.0.1"
-solana-rpc = "2.0.1"
-solana-rpc-client-api = "2.0.1"
-solana-sdk = "2.0.1"
-solana-test-validator = "2.0.1"
-solana-transaction-status = "2.0.1"
+solana-client = "=2.0.16"
+solana-logger = "=2.0.16"
+solana-program = "=2.0.16"
+solana-program-test = "=2.0.16"
+solana-sdk = "=2.0.16"
+solana-test-validator = "=2.0.16"
+solana-rpc-client-api = "=2.0.16"
+solana-rpc = "=2.0.16"
+solana-transaction-status = "=2.0.16"
 spl-associated-token-account = "5.0.1"
 spl-pod = "0.4.0"
 spl-token = "6.0.0"
 spl-token-2022 = "5.0.2"
+spl-token-metadata-interface = "0.5.1"
 tar = "0.4"
 thiserror = "1"
 tokio = { version = "1", features = ["full"] }
