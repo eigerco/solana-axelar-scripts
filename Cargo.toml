@@ -1,0 +1,80 @@
+cargo-features = ["codegen-backend"]
+
+[workspace.package]
+version = "0.1.0"
+authors = []
+repository = "https://github.com/eigerco/solana-axelar-scripts"
+homepage = "https://github.com/eigerco/solana-axelar-scripts"
+license = "MIT/Apache-2.0"
+edition = "2021"
+
+[workspace]
+resolver = "2"
+members = ["xtask"]
+
+[workspace.lints.clippy]
+cargo = { priority = -1, level = "deny" }
+complexity = { priority = -2, level = "deny" }
+perf = { priority = -3, level = "deny" }
+correctness = { priority = -4, level = "deny" }
+restriction = { priority = -5, level = "deny" }
+style = { priority = -6, level = "deny" }
+suspicious = { priority = -7, level = "deny" }
+pedantic = { priority = -8, level = "deny" }
+nursery = { priority = -9, level = "deny" }
+
+cargo_common_metadata = "allow"
+missing_docs_in_private_items = "allow"
+blanket_clippy_restriction_lints = "allow"
+implicit_return = "allow"
+dbg_macro = "allow"
+single_call_fn = "allow"
+missing_inline_in_public_items = "allow"
+question_mark_used = "allow"
+absolute_paths = "allow"
+missing_trait_methods = "allow"
+wildcard_imports = "allow"
+shadow_reuse = "allow"
+exhaustive_enums = "allow"
+ref_patterns = "allow"
+pub_use = "allow"
+single_char_lifetime_names = "allow"
+multiple_crate_versions = "allow"
+exhaustive_structs = "allow"
+future_not_send = "allow"
+separated_literal_suffix = "allow"
+mod_module_files = "allow"
+negative_feature_names = "allow"
+std_instead_of_alloc = "allow"
+expect_used = "allow"
+pub_with_shorthand = "allow"
+redundant_pub_crate = "allow"
+option_if_let_else = "allow"
+self_named_module_files = "allow"
+shadow_unrelated = "allow"
+
+[workspace.lints.rust]
+missing_docs = { level = "warn", priority = -1 }
+rust_2018_idioms = { level = "deny", priority = 0 }
+unreachable_pub = { level = "warn", priority = -1 }
+unused_imports = { level = "warn", priority = -1 }
+unused_must_use = { level = "deny", priority = -1 }
+
+[workspace.dependencies]
+# Our crates
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+
+[profile.dev]
+debug = 0
+# codegen-backend = "cranelift" (not supported on m1 mac)
+
+[patch.crates-io]
+# curve25519-dalek 3.x pin zeroize to <1.4
+# which conflicts with other dependencies requiring zeroize ^1.5.
+# We’re patching it here to unpin zeroize, using commit from a PR, see
+# https://github.com/dalek-cryptography/curve25519-dalek/pull/606
+curve25519-dalek = { git = "https://github.com/dalek-cryptography/curve25519-dalek", rev = "8274d5cbb6fc3f38cdc742b4798173895cd2a290" }
