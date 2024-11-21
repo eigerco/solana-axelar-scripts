@@ -1,59 +1,114 @@
-//! Utility crate for managing tasks, common commands,
-//! deployments for the solana-axelar integration.
+use clap::{Parser, Subcommand};
+use xshell::{cmd, Shell};
 
-use std::sync::OnceLock;
-
-use clap::Parser;
-use tracing::level_filters::LevelFilter;
-use tracing_subscriber::layer::Layered;
-use tracing_subscriber::prelude::*;
-use tracing_subscriber::{fmt, reload, EnvFilter, Registry};
-
-mod cli;
-
-static LOG_FILTER_HANDLE: OnceLock<
-    reload::Handle<EnvFilter, Layered<fmt::Layer<Registry>, Registry>>,
-> = OnceLock::new();
-
-/// Change current subscriber log level
-///
-/// # Arguments
-/// * `level` - `[LevelFilter]` with the new log level
-///
-/// # Panics
-/// If reloading the log level filter fails
-pub fn change_log_level(level: LevelFilter) {
-    if let Some(handle) = crate::LOG_FILTER_HANDLE.get() {
-        let env_filter = EnvFilter::builder()
-            .with_default_directive(level.into())
-            .from_env_lossy();
-        handle
-            .reload(env_filter)
-            .expect("Error reloading log filter");
-    }
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    #[command(subcommand)]
+    command: Commands,
 }
 
-#[tokio::main]
-async fn main() -> eyre::Result<()> {
-    let cli = cli::Cli::try_parse()?;
+#[derive(Subcommand, Debug)]
+enum Commands {
+    Deny {
+        #[clap(last = true)]
+        args: Vec<String>,
+    },
+    Test {
+        #[clap(short, long, default_value_t = false)]
+        coverage: bool,
+        #[clap(last = true)]
+        args: Vec<String>,
+    },
+    Check,
+    Fmt,
+    Doc,
+    UnusedDeps,
+}
 
+fn main() -> eyre::Result<()> {
     color_eyre::install()?;
-    let env_filter = EnvFilter::builder()
-        .with_default_directive(LevelFilter::INFO.into())
-        .from_env_lossy();
+    let sh = Shell::new()?;
+    let args = Args::parse();
 
-    let (filter_layer, handle) = reload::Layer::new(env_filter);
+    match args.command {
+        Commands::Deny { args } => {
+            println!("cargo deny");
+            cmd!(sh, "cargo install cargo-deny").run()?;
+            cmd!(sh, "cargo deny check {args...}").run()?;
+        }
+        Commands::Test { args, coverage } => {
+            println!("cargo test");
+            cmd!(sh, "cargo install cargo-nextest").run()?;
 
-    tracing_subscriber::registry()
-        .with(fmt::layer())
-        .with(filter_layer)
-        // needed for colour eyre to give better error output
-        .with(tracing_error::ErrorLayer::default())
-        .init();
+            if coverage {
+                cmd!(sh, "cargo install grcov").run()?;
+                for (key, val) in [
+                    ("CARGO_INCREMENTAL", "0"),
+                    ("RUSTFLAGS", "-Cinstrument-coverage"),
+                    ("LLVM_PROFILE_FILE", "target/coverage/%p-%m.profraw"),
+                ] {
+                    sh.set_var(key, val);
+                }
+            }
+            cmd!(
+                sh,
+                "cargo nextest run --workspace --tests --all-targets --no-fail-fast {args...}"
+            )
+            .run()?;
 
-    LOG_FILTER_HANDLE
-        .set(handle)
-        .expect("Error storing reload handle");
+            if coverage {
+                cmd!(sh, "mkdir -p target/coverage").run()?;
+                cmd!(sh, "grcov . --binary-path ./target/debug/deps/ -s . -t html,cobertura --branch --ignore-not-existing --ignore '../*' --ignore \"/*\" -o target/coverage/").run()?;
 
-    cli.run().await
+                // Open the generated file
+                if std::option_env!("CI").is_none() {
+                    #[cfg(target_os = "macos")]
+                    cmd!(sh, "open target/coverage/html/index.html").run()?;
+
+                    #[cfg(target_os = "linux")]
+                    cmd!(sh, "xdg-open target/coverage/html/index.html").run()?;
+                }
+            }
+        }
+
+        Commands::Check => {
+            println!("cargo check");
+            cmd!(sh, "cargo clippy --workspace --locked -- -D warnings").run()?;
+            cmd!(sh, "cargo fmt --all --check").run()?;
+        }
+        Commands::Fmt => {
+            println!("cargo fix");
+            cmd!(sh, "cargo fmt --all").run()?;
+            cmd!(
+                sh,
+                "cargo fix --allow-dirty --allow-staged --workspace --all-features --tests"
+            )
+            .run()?;
+            cmd!(
+                sh,
+                "cargo clippy --fix --allow-dirty --allow-staged --workspace --all-features --tests"
+            )
+            .run()?;
+        }
+        Commands::Doc => {
+            println!("cargo doc");
+            cmd!(sh, "cargo doc --workspace --no-deps --all-features").run()?;
+
+            if std::option_env!("CI").is_none() {
+                #[cfg(target_os = "macos")]
+                cmd!(sh, "open target/doc/relayer/index.html").run()?;
+
+                #[cfg(target_os = "linux")]
+                cmd!(sh, "xdg-open target/doc/relayer/index.html").run()?;
+            }
+        }
+        Commands::UnusedDeps => {
+            println!("unused deps");
+            cmd!(sh, "cargo install cargo-machete").run()?;
+            cmd!(sh, "cargo-machete").run()?;
+        }
+    }
+
+    Ok(())
 }

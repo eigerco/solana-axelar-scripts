@@ -1,5 +1,6 @@
 [alias]
 xtask = "run --package xtask --"
+script = "run --package script --"
 
 [net]
 git-fetch-with-cli = true
