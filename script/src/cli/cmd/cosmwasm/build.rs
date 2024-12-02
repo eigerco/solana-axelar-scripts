@@ -56,25 +56,13 @@ pub(crate) mod toolchain {
     use xshell::{cmd, PushEnv, Shell};
 
     use crate::cli::cmd::cosmwasm::path::axelar_amplifier_dir;
-    // install the cosmwasm target for the amplifier toolchain.
-    // because the amplifier submodule is under the same file tree in the `/solana`
-    // workspace, the `solana/rust-toolchain.toml` override carries over.
-    //
-    // It just so happens that our nightly cannot compile the contracts, but stable
-    // cannot either. see: https://users.rust-lang.org/t/error-e0635-unknown-feature-stdsimd/106445/2
-    // therefore we need to use an *old* version of nightly
-    //
-    // TODO: we should upstream a `rust-toolchain.toml` contribution to the
-    // amplifier repo
-    pub(crate) fn setup_toolchain(sh: &Shell) -> Result<PushEnv<'_>> {
-        let amplifier_dir = axelar_amplifier_dir();
-        let in_ampl_dir = sh.push_dir(amplifier_dir.clone());
-        cmd!(sh, "rustup install nightly-2024-07-16").run()?;
-        let env_toolchain = sh.push_env("RUSTUP_TOOLCHAIN", "nightly-2024-07-16");
-        cmd!(sh, "rustup target add wasm32-unknown-unknown").run()?;
-        drop(in_ampl_dir);
 
-        Ok(env_toolchain)
+    // install the cosmwasm target for the amplifier toolchain.
+    pub(crate) fn setup_toolchain(sh: &Shell) -> Result<()> {
+        let amplifier_dir = axelar_amplifier_dir();
+        let _in_ampl_dir = sh.push_dir(amplifier_dir.clone());
+        cmd!(sh, "rustup target add wasm32-unknown-unknown").run()?;
+        Ok(())
     }
 }
 

@@ -57,7 +57,7 @@ pub(crate) async fn build() -> eyre::Result<()> {
     }
 
     // set up `axelar-amplifier`-specific toolchain
-    let _toolchain = setup_toolchain(&sh)?;
+    setup_toolchain(&sh)?;
     build_contracts(&sh, &wasm_opt_binary(), &CONTRACTS).await?;
 
     Ok(())
@@ -647,12 +647,33 @@ pub(crate) mod ampd {
 pub(crate) mod path {
     use std::path::PathBuf;
 
+    use cargo_metadata::{MetadataCommand, Package};
+    use color_eyre::owo_colors::OwoColorize;
+    use walkdir::WalkDir;
+
     use crate::cli::cmd::path::{home_dir, workspace_root_dir};
 
+    /// This points to the git checkout path of `axelar-amplifier`
     pub(crate) fn axelar_amplifier_dir() -> PathBuf {
-        let workspace_root = workspace_root_dir();
-        let root_dir = workspace_root.parent().unwrap();
-        root_dir.join("axelar-amplifier")
+        let metadata = MetadataCommand::new()
+            .exec()
+            .expect("Failed to retrieve Cargo metadata");
+        let mut axelar_amplifier_dir = None;
+        for package in metadata.packages {
+            if package.name.starts_with("axelar-wasm-std") {
+                axelar_amplifier_dir = package
+                    .manifest_path
+                    .parent()
+                    .unwrap()
+                    .parent()
+                    .unwrap()
+                    .parent()
+                    .map(|p| p.to_path_buf().into_std_path_buf());
+                tracing::info!(?axelar_amplifier_dir, "pkg");
+                break;
+            }
+        }
+        axelar_amplifier_dir.unwrap()
     }
 
     pub(crate) fn wasm_opt_binary() -> PathBuf {

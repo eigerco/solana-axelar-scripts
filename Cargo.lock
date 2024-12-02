@@ -698,7 +698,7 @@ dependencies = [
 [[package]]
 name = "axelar-executable"
 version = "0.1.0"
-source = "git+https://github.com/eigerco/solana-axelar-internal.git?branch=clean-up-xtask#9e05f5f4e91f8e26b8620faff816017a703f3040"
+source = "git+https://github.com/eigerco/solana-axelar.git?rev=0be172e#0be172ec2d0b24e236d4131e8db46d93c98fe5f9"
 dependencies = [
  "alloy-sol-types",
  "axelar-solana-encoding",
@@ -714,7 +714,7 @@ dependencies = [
 [[package]]
 name = "axelar-executable-old"
 version = "0.1.0"
-source = "git+https://github.com/eigerco/solana-axelar-internal.git?branch=clean-up-xtask#9e05f5f4e91f8e26b8620faff816017a703f3040"
+source = "git+https://github.com/eigerco/solana-axelar.git?rev=0be172e#0be172ec2d0b24e236d4131e8db46d93c98fe5f9"
 dependencies = [
  "axelar-message-primitives",
  "axelar-rkyv-encoding",
@@ -726,7 +726,7 @@ dependencies = [
 [[package]]
 name = "axelar-message-primitives"
 version = "0.1.0"
-source = "git+https://github.com/eigerco/solana-axelar-internal.git?branch=clean-up-xtask#9e05f5f4e91f8e26b8620faff816017a703f3040"
+source = "git+https://github.com/eigerco/solana-axelar.git?rev=0be172e#0be172ec2d0b24e236d4131e8db46d93c98fe5f9"
 dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
@@ -742,9 +742,10 @@ dependencies = [
 [[package]]
 name = "axelar-rkyv-encoding"
 version = "0.1.0"
-source = "git+https://github.com/eigerco/solana-axelar-internal.git?branch=clean-up-xtask#9e05f5f4e91f8e26b8620faff816017a703f3040"
+source = "git+https://github.com/eigerco/solana-axelar.git?rev=0be172e#0be172ec2d0b24e236d4131e8db46d93c98fe5f9"
 dependencies = [
  "arrayref",
+ "bitflags 2.6.0",
  "bnum",
  "bs58",
  "bytemuck",
@@ -763,7 +764,7 @@ dependencies = [
 [[package]]
 name = "axelar-solana-encoding"
 version = "0.1.0"
-source = "git+https://github.com/eigerco/solana-axelar-internal.git?branch=clean-up-xtask#9e05f5f4e91f8e26b8620faff816017a703f3040"
+source = "git+https://github.com/eigerco/solana-axelar.git?rev=0be172e#0be172ec2d0b24e236d4131e8db46d93c98fe5f9"
 dependencies = [
  "arrayref",
  "borsh 1.5.3",
@@ -780,11 +781,10 @@ dependencies = [
 [[package]]
 name = "axelar-solana-gateway"
 version = "0.1.0"
-source = "git+https://github.com/eigerco/solana-axelar-internal.git?branch=clean-up-xtask#9e05f5f4e91f8e26b8620faff816017a703f3040"
+source = "git+https://github.com/eigerco/solana-axelar.git?rev=0be172e#0be172ec2d0b24e236d4131e8db46d93c98fe5f9"
 dependencies = [
  "axelar-message-primitives",
  "axelar-solana-encoding",
- "base64 0.21.7",
  "bincode",
  "bitvec",
  "borsh 1.5.3",
@@ -796,7 +796,6 @@ dependencies = [
  "num-derive",
  "num-traits",
  "program-utils",
- "rkyv",
  "solana-program",
  "thiserror",
 ]
@@ -804,7 +803,7 @@ dependencies = [
 [[package]]
 name = "axelar-solana-memo-program"
 version = "0.1.0"
-source = "git+https://github.com/eigerco/solana-axelar-internal.git?branch=clean-up-xtask#9e05f5f4e91f8e26b8620faff816017a703f3040"
+source = "git+https://github.com/eigerco/solana-axelar.git?rev=0be172e#0be172ec2d0b24e236d4131e8db46d93c98fe5f9"
 dependencies = [
  "axelar-executable",
  "axelar-solana-gateway",
@@ -816,6 +815,7 @@ dependencies = [
 [[package]]
 name = "axelar-wasm-std"
 version = "1.0.0"
+source = "git+https://github.com/eigerco/axelar-amplifier.git?rev=40790eb#40790eba68ece824025343a21076b61febdfd1de"
 dependencies = [
  "alloy-primitives",
  "axelar-wasm-std-derive",
@@ -835,6 +835,7 @@ dependencies = [
  "schemars",
  "serde",
  "serde_json",
+ "serde_with 3.11.0",
  "sha3 0.10.8",
  "stellar-xdr",
  "strum 0.25.0",
@@ -846,6 +847,7 @@ dependencies = [
 [[package]]
 name = "axelar-wasm-std-derive"
 version = "1.0.0"
+source = "git+https://github.com/eigerco/axelar-amplifier.git?rev=40790eb#40790eba68ece824025343a21076b61febdfd1de"
 dependencies = [
  "error-stack",
  "quote",
@@ -1402,6 +1404,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "cargo_metadata"
+version = "0.19.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "afc309ed89476c8957c50fb818f56fe894db857866c3e163335faa91dc34eb85"
+dependencies = [
+ "camino",
+ "cargo-platform",
+ "semver 1.0.23",
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
 name = "cc"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1573,6 +1589,7 @@ checksum = "afb84c814227b90d6895e01398aee0d8033c00e7466aca416fb6a8e0eb19d8a7"
 [[package]]
 name = "client"
 version = "1.0.0"
+source = "git+https://github.com/eigerco/axelar-amplifier.git?rev=40790eb#40790eba68ece824025343a21076b61febdfd1de"
 dependencies = [
  "cosmwasm-std",
  "error-stack",
@@ -1780,7 +1797,8 @@ checksum = "6245d59a3e82a7fc217c5828a6692dbc6dfb63a0c8c90495621f7b9d79704a0e"
 
 [[package]]
 name = "coordinator"
-version = "1.0.0"
+version = "1.1.0"
+source = "git+https://github.com/eigerco/axelar-amplifier.git?rev=40790eb#40790eba68ece824025343a21076b61febdfd1de"
 dependencies = [
  "axelar-wasm-std",
  "client",
@@ -1789,10 +1807,12 @@ dependencies = [
  "cw-storage-plus",
  "cw2",
  "error-stack",
+ "itertools 0.11.0",
  "msgs-derive",
  "multisig",
  "report",
  "router-api",
+ "service-registry-api",
  "thiserror",
 ]
 
@@ -2300,6 +2320,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b42b6fa04a440b495c8b04d0e71b707c585f83cb9cb28cf8cd0d976c315e31b4"
 dependencies = [
  "powerfmt",
+ "serde",
 ]
 
 [[package]]
@@ -2984,7 +3005,7 @@ checksum = "82d80cc6ad30b14a48ab786523af33b37f28a8623fc06afd55324816ef18fb1f"
 dependencies = [
  "arrayvec",
  "bytes",
- "cargo_metadata",
+ "cargo_metadata 0.18.1",
  "chrono",
  "const-hex",
  "elliptic-curve",
@@ -3146,7 +3167,7 @@ checksum = "0206175f82b8d6bf6652ff7d71a1e27fd2e4efde587fd368662814d6ec1d9ce0"
 [[package]]
 name = "evm-contracts-rs"
 version = "0.1.0"
-source = "git+https://github.com/eigerco/solana-axelar-internal.git?branch=clean-up-xtask#9e05f5f4e91f8e26b8620faff816017a703f3040"
+source = "git+https://github.com/eigerco/solana-axelar.git?rev=0be172e#0be172ec2d0b24e236d4131e8db46d93c98fe5f9"
 dependencies = [
  "ethers",
  "xshell",
@@ -3155,7 +3176,7 @@ dependencies = [
 [[package]]
 name = "evm-contracts-test-suite"
 version = "0.1.0"
-source = "git+https://github.com/eigerco/solana-axelar-internal.git?branch=clean-up-xtask#9e05f5f4e91f8e26b8620faff816017a703f3040"
+source = "git+https://github.com/eigerco/solana-axelar.git?rev=0be172e#0be172ec2d0b24e236d4131e8db46d93c98fe5f9"
 dependencies = [
  "anyhow",
  "ethers",
@@ -3491,7 +3512,7 @@ dependencies = [
 [[package]]
 name = "gas-service"
 version = "0.1.0"
-source = "git+https://github.com/eigerco/solana-axelar-internal.git?branch=clean-up-xtask#9e05f5f4e91f8e26b8620faff816017a703f3040"
+source = "git+https://github.com/eigerco/solana-axelar.git?rev=0be172e#0be172ec2d0b24e236d4131e8db46d93c98fe5f9"
 dependencies = [
  "axelar-message-primitives",
  "base64 0.21.7",
@@ -3504,7 +3525,8 @@ dependencies = [
 
 [[package]]
 name = "gateway"
-version = "1.0.0"
+version = "1.1.1"
+source = "git+https://github.com/eigerco/axelar-amplifier.git?rev=40790eb#40790eba68ece824025343a21076b61febdfd1de"
 dependencies = [
  "axelar-wasm-std",
  "client",
@@ -3526,6 +3548,7 @@ dependencies = [
 [[package]]
 name = "gateway-api"
 version = "1.0.0"
+source = "git+https://github.com/eigerco/axelar-amplifier.git?rev=40790eb#40790eba68ece824025343a21076b61febdfd1de"
 dependencies = [
  "axelar-wasm-std",
  "client",
@@ -3625,7 +3648,7 @@ dependencies = [
 [[package]]
 name = "gmp-gateway"
 version = "0.1.0"
-source = "git+https://github.com/eigerco/solana-axelar-internal.git?branch=clean-up-xtask#9e05f5f4e91f8e26b8620faff816017a703f3040"
+source = "git+https://github.com/eigerco/solana-axelar.git?rev=0be172e#0be172ec2d0b24e236d4131e8db46d93c98fe5f9"
 dependencies = [
  "arrayref",
  "axelar-message-primitives",
@@ -4406,6 +4429,7 @@ checksum = "bd070e393353796e801d209ad339e89596eb4c8d430d18ede6a1cced8fafbd99"
 dependencies = [
  "autocfg",
  "hashbrown 0.12.3",
+ "serde",
 ]
 
 [[package]]
@@ -4417,6 +4441,7 @@ dependencies = [
  "equivalent",
  "hashbrown 0.15.1",
  "rayon",
+ "serde",
 ]
 
 [[package]]
@@ -4470,7 +4495,7 @@ dependencies = [
 [[package]]
 name = "interchain-token-transfer-gmp"
 version = "0.1.0"
-source = "git+https://github.com/eigerco/solana-axelar-internal.git?branch=clean-up-xtask#9e05f5f4e91f8e26b8620faff816017a703f3040"
+source = "git+https://github.com/eigerco/solana-axelar.git?rev=0be172e#0be172ec2d0b24e236d4131e8db46d93c98fe5f9"
 dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
@@ -4480,6 +4505,7 @@ dependencies = [
 [[package]]
 name = "into-inner-derive"
 version = "1.0.0"
+source = "git+https://github.com/eigerco/axelar-amplifier.git?rev=40790eb#40790eba68ece824025343a21076b61febdfd1de"
 dependencies = [
  "error-stack",
  "quote",
@@ -5224,6 +5250,7 @@ dependencies = [
 [[package]]
 name = "msgs-derive"
 version = "1.0.0"
+source = "git+https://github.com/eigerco/axelar-amplifier.git?rev=40790eb#40790eba68ece824025343a21076b61febdfd1de"
 dependencies = [
  "axelar-wasm-std",
  "cosmwasm-std",
@@ -5242,7 +5269,8 @@ checksum = "e5ce46fe64a9d73be07dcbe690a38ce1b293be448fd8ce1e6c1b8062c9f72c6a"
 
 [[package]]
 name = "multisig"
-version = "1.0.0"
+version = "1.1.1"
+source = "git+https://github.com/eigerco/axelar-amplifier.git?rev=40790eb#40790eba68ece824025343a21076b61febdfd1de"
 dependencies = [
  "axelar-wasm-std",
  "client",
@@ -6169,7 +6197,7 @@ dependencies = [
 [[package]]
 name = "program-utils"
 version = "0.1.0"
-source = "git+https://github.com/eigerco/solana-axelar-internal.git?branch=clean-up-xtask#9e05f5f4e91f8e26b8620faff816017a703f3040"
+source = "git+https://github.com/eigerco/solana-axelar.git?rev=0be172e#0be172ec2d0b24e236d4131e8db46d93c98fe5f9"
 dependencies = [
  "rkyv",
  "solana-program",
@@ -6628,6 +6656,7 @@ dependencies = [
 [[package]]
 name = "report"
 version = "1.0.0"
+source = "git+https://github.com/eigerco/axelar-amplifier.git?rev=40790eb#40790eba68ece824025343a21076b61febdfd1de"
 dependencies = [
  "error-stack",
  "eyre",
@@ -6746,7 +6775,8 @@ dependencies = [
 
 [[package]]
 name = "rewards"
-version = "1.1.0"
+version = "1.2.0"
+source = "git+https://github.com/eigerco/axelar-amplifier.git?rev=40790eb#40790eba68ece824025343a21076b61febdfd1de"
 dependencies = [
  "axelar-wasm-std",
  "cosmwasm-schema 1.5.8",
@@ -6884,8 +6914,10 @@ dependencies = [
 [[package]]
 name = "router-api"
 version = "1.0.0"
+source = "git+https://github.com/eigerco/axelar-amplifier.git?rev=40790eb#40790eba68ece824025343a21076b61febdfd1de"
 dependencies = [
  "axelar-wasm-std",
+ "client",
  "cosmwasm-schema 1.5.8",
  "cosmwasm-std",
  "cw-storage-plus",
@@ -7245,6 +7277,7 @@ dependencies = [
  "bincode",
  "bip39",
  "borsh 1.5.3",
+ "cargo_metadata 0.19.0",
  "clap 4.5.21",
  "color-eyre",
  "const_format",
@@ -7302,6 +7335,7 @@ dependencies = [
  "tracing-subscriber",
  "url 2.5.3",
  "voting-verifier",
+ "walkdir",
  "xshell",
 ]
 
@@ -7547,7 +7581,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "07ff71d2c147a7b57362cead5e22f772cd52f6ab31cfcd9edcd7f6aeb2a0afbe"
 dependencies = [
  "serde",
- "serde_with_macros",
+ "serde_with_macros 2.3.3",
+]
+
+[[package]]
+name = "serde_with"
+version = "3.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8e28bdad6db2b8340e449f7108f020b3b092e8583a9e3fb82713e1d4e71fe817"
+dependencies = [
+ "base64 0.22.1",
+ "chrono",
+ "hex",
+ "indexmap 1.9.3",
+ "indexmap 2.6.0",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "serde_with_macros 3.11.0",
+ "time",
 ]
 
 [[package]]
@@ -7555,6 +7607,18 @@ name = "serde_with_macros"
 version = "2.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "881b6f881b17d13214e5d494c939ebab463d01264ce1811e9d4ac3a882e7695f"
+dependencies = [
+ "darling",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.89",
+]
+
+[[package]]
+name = "serde_with_macros"
+version = "3.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9d846214a9854ef724f3da161b426242d8de7c1fc7de2f89bb1efcb154dca79d"
 dependencies = [
  "darling",
  "proc-macro2",
@@ -7577,7 +7641,8 @@ dependencies = [
 
 [[package]]
 name = "service-registry"
-version = "1.0.0"
+version = "1.1.0"
+source = "git+https://github.com/eigerco/axelar-amplifier.git?rev=40790eb#40790eba68ece824025343a21076b61febdfd1de"
 dependencies = [
  "axelar-wasm-std",
  "client",
@@ -7588,6 +7653,26 @@ dependencies = [
  "cw2",
  "error-stack",
  "itertools 0.11.0",
+ "msgs-derive",
+ "report",
+ "router-api",
+ "schemars",
+ "serde",
+ "service-registry-api",
+ "thiserror",
+]
+
+[[package]]
+name = "service-registry-api"
+version = "1.0.0"
+source = "git+https://github.com/eigerco/axelar-amplifier.git?rev=40790eb#40790eba68ece824025343a21076b61febdfd1de"
+dependencies = [
+ "axelar-wasm-std",
+ "client",
+ "cosmwasm-schema 1.5.8",
+ "cosmwasm-std",
+ "cw-storage-plus",
+ "error-stack",
  "msgs-derive",
  "report",
  "router-api",
@@ -7746,6 +7831,7 @@ dependencies = [
 [[package]]
 name = "signature-verifier-api"
 version = "1.0.0"
+source = "git+https://github.com/eigerco/axelar-amplifier.git?rev=40790eb#40790eba68ece824025343a21076b61febdfd1de"
 dependencies = [
  "cosmwasm-schema 1.5.8",
  "cosmwasm-std",
@@ -9097,7 +9183,7 @@ dependencies = [
  "serde_bytes",
  "serde_derive",
  "serde_json",
- "serde_with",
+ "serde_with 2.3.3",
  "sha2 0.10.8",
  "sha3 0.10.8",
  "siphasher",
@@ -10257,6 +10343,7 @@ checksum = "734676eb262c623cec13c3155096e08d1f8f29adce39ba17948b18dad1e54142"
 [[package]]
 name = "sui-types"
 version = "1.0.0"
+source = "git+https://github.com/eigerco/axelar-amplifier.git?rev=40790eb#40790eba68ece824025343a21076b61febdfd1de"
 dependencies = [
  "error-stack",
  "hex",
@@ -10626,7 +10713,7 @@ checksum = "3369f5ac52d5eb6ab48c6b4ffdc8efbcad6b89c765749064ba298f2c68a16a76"
 [[package]]
 name = "test-fixtures"
 version = "0.1.0"
-source = "git+https://github.com/eigerco/solana-axelar-internal.git?branch=clean-up-xtask#9e05f5f4e91f8e26b8620faff816017a703f3040"
+source = "git+https://github.com/eigerco/solana-axelar.git?rev=0be172e#0be172ec2d0b24e236d4131e8db46d93c98fe5f9"
 dependencies = [
  "anyhow",
  "axelar-executable-old",
@@ -11484,7 +11571,8 @@ checksum = "6a02e4885ed3bc0f2de90ea6dd45ebcbb66dacffe03547fadbb0eeae2770887d"
 
 [[package]]
 name = "voting-verifier"
-version = "1.0.0"
+version = "1.1.0"
+source = "git+https://github.com/eigerco/axelar-amplifier.git?rev=40790eb#40790eba68ece824025343a21076b61febdfd1de"
 dependencies = [
  "axelar-wasm-std",
  "client",
@@ -11501,6 +11589,7 @@ dependencies = [
  "router-api",
  "serde_json",
  "service-registry",
+ "service-registry-api",
  "thiserror",
 ]
 

@@ -16,9 +16,9 @@ pub(crate) mod path {
         PathBuf::from(dir).parent().unwrap().to_owned()
     }
 
-    /// Return the [`PathBuf`] that points to the `[repo]/solana/xtask` folder
+    // Return the [`PathBuf`] that points to the `[repo]/script` folder
     pub(crate) fn xtask_crate_root_dir() -> PathBuf {
-        self::workspace_root_dir().join("xtask")
+        self::workspace_root_dir().join("script")
     }
 
     /// Wrapper function for acquiring the home dir.
