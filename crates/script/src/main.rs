@@ -1,6 +1,8 @@
 //! Utility crate for managing tasks, common commands,
 //! deployments for the solana-axelar integration.
 
+#![feature(result_flattening)]
+
 use std::sync::OnceLock;
 
 use clap::Parser;

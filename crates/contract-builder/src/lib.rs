@@ -62,7 +62,7 @@ pub fn workspace_root_dir() -> PathBuf {
 // Return the [`PathBuf`] that points to the `[repo]/script` folder
 #[must_use]
 pub fn scripts_crate_root_dir() -> PathBuf {
-    self::workspace_root_dir().join("crates").join("script")
+    self::workspace_root_dir().join("script")
 }
 
 /// Wrapper function for acquiring the home dir.
@@ -113,6 +113,7 @@ pub mod cosmwasm_contract {
 
     use crate::{axelar_amplifier_dir, workspace_root_dir};
 
+    #[derive(Debug)]
     pub struct WasmContracts {
         pub wasm_artifact_name: &'static str,
         pub contract_project_folder: &'static str,
@@ -133,6 +134,7 @@ pub mod cosmwasm_contract {
         },
     ];
 
+    #[tracing::instrument(err)]
     pub async fn build() -> eyre::Result<()> {
         let sh = Shell::new()?;
 
@@ -151,6 +153,7 @@ pub mod cosmwasm_contract {
         Ok(())
     }
 
+    #[tracing::instrument(err)]
     pub async fn build_contracts(
         sh: &Shell,
         wasm_opt: &Path,
@@ -231,11 +234,19 @@ pub mod cosmwasm_contract {
     }
 
     pub(crate) fn binaryen_tar_file() -> PathBuf {
-        workspace_root_dir().join("target").join("binaryen.tar.gz")
+        workspace_root_dir()
+            .parent()
+            .unwrap()
+            .join("target")
+            .join("binaryen.tar.gz")
     }
 
     pub(crate) fn binaryen_unpacked() -> PathBuf {
-        workspace_root_dir().join("target").join("binaryen")
+        workspace_root_dir()
+            .parent()
+            .unwrap()
+            .join("target")
+            .join("binaryen")
     }
 
     pub(crate) mod download {
@@ -248,6 +259,7 @@ pub mod cosmwasm_contract {
         use futures::StreamExt as _;
         use tar::Archive;
 
+        #[tracing::instrument(err)]
         pub(crate) async fn download_file(file_path: &Path, url: &str) -> eyre::Result<()> {
             // Todo, this function could be tested.
             let client = reqwest::Client::new();
@@ -268,6 +280,7 @@ pub mod cosmwasm_contract {
             Ok(())
         }
 
+        #[tracing::instrument(err)]
         pub(crate) async fn download_wasm_opt(file_path: &Path) -> Result<()> {
             let url = determine_download_url();
             download_file(file_path, &url).await

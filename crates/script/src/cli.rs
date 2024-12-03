@@ -684,6 +684,7 @@ fn get_axelar_configuration(axelar_chain_name: &str) -> eyre::Result<AxelarDeplo
         _ => eyre::bail!("invalid axelar chain name"),
     };
 
+    dbg!(&path);
     let file = std::fs::File::open(path)?;
     let deployment = AxelarDeploymentRoot::from_reader(file);
     Ok(deployment)

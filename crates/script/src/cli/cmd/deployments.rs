@@ -33,29 +33,33 @@ impl SolanaDeploymentRoot {
         let span = tracing::info_span!("deployment file storage");
         let _span_guard = span.enter();
         tracing::info!(?path);
-        let file_storage = OpenOptions::new().read(true).write(true).open(path)?;
+        let file_storage = OpenOptions::new().read(true).write(true).open(path);
 
         // read from file or init new
-        let solana_root = Self::from_file(file_storage).unwrap_or_else(|err| {
-            tracing::warn!(?err, "initiallizing a new solana deployment file");
-            let axelar_config =
-                AxelarConfiguration::new_from_axelar_chain_deployment(axelar.clone());
-            let solana_configuration = SolanaConfiguration::new(
-                solana_chain_name_on_axelar_chain,
-                &axelar_config,
-                solana_rpc,
-            );
-            Self {
-                solana_configuration,
-                axelar_configuration: axelar_config,
-                voting_verifier: None,
-                axelar_gateway: None,
-                multisig_prover: None,
-                solana_gateway: None,
-                solana_memo_program: None,
-                evm_deployments: EvmDeployments::default(),
-            }
-        });
+        let solana_root = file_storage
+            .map(|file_storage| Self::from_file(file_storage))
+            .map_err(|err| eyre::Report::from(err))
+            .flatten()
+            .unwrap_or_else(|err| {
+                tracing::warn!(?err, "initiallizing a new solana deployment file");
+                let axelar_config =
+                    AxelarConfiguration::new_from_axelar_chain_deployment(axelar.clone());
+                let solana_configuration = SolanaConfiguration::new(
+                    solana_chain_name_on_axelar_chain,
+                    &axelar_config,
+                    solana_rpc,
+                );
+                Self {
+                    solana_configuration,
+                    axelar_configuration: axelar_config,
+                    voting_verifier: None,
+                    axelar_gateway: None,
+                    multisig_prover: None,
+                    solana_gateway: None,
+                    solana_memo_program: None,
+                    evm_deployments: EvmDeployments::default(),
+                }
+            });
         solana_root.save()?;
 
         Ok(solana_root)
