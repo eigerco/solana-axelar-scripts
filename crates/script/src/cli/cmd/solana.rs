@@ -59,7 +59,7 @@ pub(crate) fn deploy(
     ws_url: Option<&Url>,
 ) -> eyre::Result<()> {
     info!("Starting compiling {}", contract);
-    contract_builder::solana::build_contracts(None)?;
+    contract_builder::solana::build_contracts()?;
     info!("Compiled {}", contract);
 
     info!("Starting deploying {}", contract);

@@ -438,7 +438,7 @@ async fn handle_solana(
 ) -> eyre::Result<()> {
     match command {
         Solana::Build => {
-            contract_builder::solana::build_contracts(None)?;
+            contract_builder::solana::build_contracts()?;
         }
         Solana::Deploy {
             contract,

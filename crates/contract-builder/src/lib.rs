@@ -82,15 +82,17 @@ pub mod solana {
     use crate::axelar_solana_dir;
 
     #[tracing::instrument(skip_all)]
-    pub fn build_contracts(contracts: Option<&[PathBuf]>) -> eyre::Result<()> {
+    pub fn build_contracts() -> eyre::Result<()> {
         let sh = Shell::new()?;
         sh.change_dir(axelar_solana_dir());
-        if let Some(contracts) = contracts {
-            for contract in contracts {
-                cmd!(sh, "cargo build-sbf --manifest-path {contract}").run()?;
-            }
-        } else {
-            cmd!(sh, "cargo build-sbf").run()?;
+        let contracts = [
+            "programs/axelar-solana-gateway/Cargo.toml",
+            "programs/axelar-solana-multicall/Cargo.toml",
+            "programs/axelar-solana-its/Cargo.toml",
+            "programs/axelar-solana-governance/Cargo.toml",
+        ];
+        for contract in contracts {
+            cmd!(sh, "cargo build-sbf --manifest-path {contract}").run()?;
         }
 
         Ok(())
