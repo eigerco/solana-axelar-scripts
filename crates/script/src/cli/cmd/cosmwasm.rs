@@ -515,7 +515,7 @@ pub(crate) mod ampd {
         build_ampd()?;
 
         tracing::info!("starting tofnd");
-        let expected_import_file = workspace_root_dir().join("tofnd").join("import");
+        let expected_import_file = scripts_crate_root_dir().join("tofnd").join("import");
         if !expected_import_file.try_exists()? {
             eyre::bail!("create a new `tofnd/import` file that would contain the tofnd root seed!")
         }

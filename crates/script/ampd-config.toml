@@ -27,14 +27,13 @@ cosmwasm_contract = "axelar19jxy26z0qnnspa45y5nru0l5rmy9d637z5km2ndjxthfxf5qasws
 type = "MultisigSigner"
 
 [[handlers]]
-chain_name = "solana-devnet"
-chain_rpc_url = "https://api.devnet.solana.com"
-cosmwasm_contract = "axelar1ax3e9c5hd4n2438yy440y3g0gh5m7y70q7gqwfz02v0knzpa483qwta2j6"
 type = "SolanaMsgVerifier"
-max_tx_cache_entries = 6
+chain_name = "solana-devnet"
+rpc_url = "https://api.devnet.solana.com"
+cosmwasm_contract = "axelar1ax3e9c5hd4n2438yy440y3g0gh5m7y70q7gqwfz02v0knzpa483qwta2j6"
 
 [[handlers]]
-chain_name = "solana-devnet"
-chain_rpc_url = "https://api.devnet.solana.com"
-cosmwasm_contract = "axelar1ax3e9c5hd4n2438yy440y3g0gh5m7y70q7gqwfz02v0knzpa483qwta2j6"
 type = "SolanaVerifierSetVerifier"
+chain_name = "solana-devnet"
+rpc_url = "https://api.devnet.solana.com"
+cosmwasm_contract = "axelar1ax3e9c5hd4n2438yy440y3g0gh5m7y70q7gqwfz02v0knzpa483qwta2j6"
