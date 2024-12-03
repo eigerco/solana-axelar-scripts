@@ -8,7 +8,6 @@ use axelar_solana_encoding::types::pubkey::PublicKey;
 use axelar_solana_encoding::types::verifier_set::VerifierSet;
 use axelar_solana_gateway::axelar_auth_weighted::RotationDelaySecs;
 use axelar_solana_gateway::get_gateway_root_config_pda;
-use axelar_solana_gateway::instructions::InitializeConfig;
 use contract_builder::solana::contracts_artifact_dir;
 use eyre::OptionExt;
 use solana_client::rpc_client::RpcClient;

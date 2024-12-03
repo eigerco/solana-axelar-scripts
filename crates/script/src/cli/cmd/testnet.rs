@@ -6,15 +6,13 @@ pub(crate) mod solana_interactions;
 use std::str::FromStr;
 use std::time::Duration;
 
-use axelar_executable::{AxelarExecutablePayload, AxelarMessagePayload};
-use axelar_solana_encoding::types::execute_data::{self, ExecuteData, MerkleisedPayload};
+use axelar_executable::AxelarMessagePayload;
+use axelar_solana_encoding::types::execute_data::{ExecuteData, MerkleisedPayload};
 use axelar_solana_gateway::{get_gateway_root_config_pda, state};
-use color_eyre::owo_colors::OwoColorize;
 use ethers::types::{Address as EvmAddress, H160};
 use evm_contracts_test_suite::EvmSigner;
 use eyre::OptionExt;
 use solana_sdk::signature::Keypair;
-use solana_sdk::signer::Signer;
 
 use super::axelar_deployments::{AxelarDeploymentRoot, EvmChain};
 use super::cosmwasm::cosmos_client::signer::SigningClient;
@@ -144,7 +142,7 @@ pub(crate) async fn evm_to_solana(
                 )?;
                 solana_interactions::solana_call_executable(
                     message.leaf.message,
-                    &payload.to_vec(),
+                    &payload,
                     message_pda,
                     &solana_rpc_client,
                     &solana_keypair,

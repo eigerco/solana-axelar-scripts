@@ -14,7 +14,6 @@ use solana_sdk::signer::Signer;
 use solana_transaction_status::UiTransactionEncoding;
 
 use crate::cli::cmd::axelar_deployments::EvmChain;
-use crate::cli::cmd::deployments::SolanaConfiguration;
 
 pub(crate) fn send_memo_from_solana(
     solana_rpc_client: &solana_client::rpc_client::RpcClient,
@@ -81,7 +80,7 @@ pub(crate) fn send_memo_from_solana(
         eyre::bail!("unexpected event");
     };
 
-    let payload = call_contract.payload.to_vec();
+    let payload = call_contract.payload.clone();
     let signature = signature.to_string();
     let message = router_api::Message {
         cc_id: CrossChainId::new(solana_chain_id, format!("{signature}-{event_idx}")).unwrap(),
@@ -89,10 +88,8 @@ pub(crate) fn send_memo_from_solana(
             .map_err(|err| eyre::eyre!(format!("invalid pubkey: {}", err.to_string())))?,
         destination_chain: ChainName::from_str(call_contract.destination_chain.as_str())
             .map_err(|err| eyre::eyre!(format!("{}", err.to_string())))?,
-        destination_address: Address::from_str(
-            &call_contract.destination_contract_address.as_str(),
-        )
-        .map_err(|err| eyre::eyre!(format!("{}", err.to_string())))?,
+        destination_address: Address::from_str(call_contract.destination_contract_address.as_str())
+            .map_err(|err| eyre::eyre!(format!("{}", err.to_string())))?,
         payload_hash: call_contract.payload_hash,
     };
 

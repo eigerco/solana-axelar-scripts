@@ -264,8 +264,9 @@ impl EvmChain {
 
 #[cfg(test)]
 mod tests {
+    use contract_builder::scripts_crate_root_dir;
+
     use super::*;
-    use crate::cli::cmd::path::xtask_crate_root_dir;
 
     #[test]
     fn can_deserialize_root() {
@@ -289,7 +290,8 @@ mod tests {
     }
 
     fn get_data() -> simd_json::owned::Value {
-        let mut data = std::fs::read(xtask_crate_root_dir().join("devnet-amplifier.json")).unwrap();
+        let mut data =
+            std::fs::read(scripts_crate_root_dir().join("devnet-amplifier.json")).unwrap();
         simd_json::to_owned_value(data.as_mut_slice()).unwrap()
     }
 }

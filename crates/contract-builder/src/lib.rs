@@ -1,15 +1,16 @@
 //! Utilities for building contractst
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
-use cargo_metadata::{MetadataCommand, Package};
-use color_eyre::owo_colors::OwoColorize;
+use cargo_metadata::MetadataCommand;
 
 /// This points to the git checkout path of `axelar-amplifier`
+#[must_use]
 pub fn axelar_amplifier_dir() -> PathBuf {
     get_manifest_path_for_git_dep("axelar-wasm-std")
 }
 
+#[must_use]
 pub fn axelar_solana_dir() -> PathBuf {
     get_manifest_path_for_git_dep("axelar-solana-gateway")
 }
@@ -37,10 +38,12 @@ pub(crate) fn get_manifest_path_for_git_dep(desired_package_name: &str) -> PathB
     pkg.unwrap()
 }
 
+#[must_use]
 pub fn ampd_home_dir() -> PathBuf {
     home_dir().join(".ampd")
 }
 
+#[must_use]
 pub fn ampd_bin() -> PathBuf {
     axelar_amplifier_dir()
         .join("target")
@@ -49,6 +52,7 @@ pub fn ampd_bin() -> PathBuf {
 }
 
 /// Return the [`PathBuf`] that points to the `[repo]/solana` folder
+#[must_use]
 pub fn workspace_root_dir() -> PathBuf {
     let dir = std::env::var("CARGO_MANIFEST_DIR")
         .unwrap_or_else(|_| env!("CARGO_MANIFEST_DIR").to_owned());
@@ -56,12 +60,14 @@ pub fn workspace_root_dir() -> PathBuf {
 }
 
 // Return the [`PathBuf`] that points to the `[repo]/script` folder
+#[must_use]
 pub fn scripts_crate_root_dir() -> PathBuf {
     self::workspace_root_dir().join("crates").join("script")
 }
 
 /// Wrapper function for acquiring the home dir.
-#[allow(deprecated)]
+#[expect(deprecated)]
+#[must_use]
 pub fn home_dir() -> PathBuf {
     // Todo, we could use a crate as the std docs recommend, but windows
     // is not a supported target down the road of this CLI.
@@ -90,13 +96,14 @@ pub mod solana {
         Ok(())
     }
 
+    #[must_use]
     pub fn contracts_artifact_dir() -> PathBuf {
         axelar_solana_dir().join("target").join("deploy")
     }
 }
 
 pub mod cosmwasm_contract {
-    use std::io::Write;
+    use std::io::Write as _;
     use std::path::{Path, PathBuf};
 
     use download::{download_wasm_opt, unpack_tar_gz};
@@ -203,14 +210,14 @@ pub mod cosmwasm_contract {
 
     pub(crate) mod toolchain {
         use eyre::Result;
-        use xshell::{cmd, PushEnv, Shell};
+        use xshell::{cmd, Shell};
 
         use crate::axelar_amplifier_dir;
 
         // install the cosmwasm target for the amplifier toolchain.
         pub(crate) fn setup_toolchain(sh: &Shell) -> Result<()> {
             let amplifier_dir = axelar_amplifier_dir();
-            let _in_ampl_dir = sh.push_dir(amplifier_dir.clone());
+            let _in_ampl_dir = sh.push_dir(amplifier_dir);
             cmd!(sh, "rustup target add wasm32-unknown-unknown").run()?;
             Ok(())
         }
@@ -233,12 +240,12 @@ pub mod cosmwasm_contract {
 
     pub(crate) mod download {
         use std::fs::create_dir_all;
-        use std::io::Write;
+        use std::io::Write as _;
         use std::path::Path;
 
         use eyre::Result;
         use flate2::read::GzDecoder;
-        use futures::StreamExt;
+        use futures::StreamExt as _;
         use tar::Archive;
 
         pub(crate) async fn download_file(file_path: &Path, url: &str) -> eyre::Result<()> {

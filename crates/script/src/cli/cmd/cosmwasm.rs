@@ -1,4 +1,3 @@
-use std::io::Write;
 use std::str::FromStr;
 
 use contract_builder::cosmwasm_contract::{read_wasm_for_deployment, WasmContracts, CONTRACTS};
@@ -10,7 +9,6 @@ use k256::elliptic_curve::rand_core::OsRng;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use solana_sdk::keccak::hashv;
-use xshell::Shell;
 
 pub(crate) mod cosmos_client;
 
