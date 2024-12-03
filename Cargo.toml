@@ -8,7 +8,7 @@ edition = "2021"
 
 [workspace]
 resolver = "2"
-members = ["xtask", "script"]
+members = ["xtask", "crates/*"]
 
 [workspace.lints.clippy]
 cargo = { priority = -1, level = "deny" }
@@ -59,7 +59,48 @@ unused_imports = { level = "warn", priority = -1 }
 unused_must_use = { level = "deny", priority = -1 }
 
 [workspace.dependencies]
-# Our crates
+contract-builder = { path = "crates/contract-builder" }
+
+axelar-executable = { git = "https://github.com/eigerco/solana-axelar.git", rev = "0be172e" }
+gateway-event-stack = { git = "https://github.com/eigerco/solana-axelar.git", rev = "0be172e" }
+axelar-solana-encoding = { git = "https://github.com/eigerco/solana-axelar.git", rev = "0be172e" }
+axelar-solana-memo-program = { git = "https://github.com/eigerco/solana-axelar.git", rev = "0be172e" }
+axelar-solana-gateway = { git = "https://github.com/eigerco/solana-axelar.git", rev = "0be172e" }
+axelar-solana-gateway-test-fixtures = { git = "https://github.com/eigerco/solana-axelar.git", rev = "0be172e" }
+evm-contracts-test-suite = { git = "https://github.com/eigerco/solana-axelar.git", rev = "0be172e" }
+
+solana-cli-config = "2.0.1"
+solana-client = "=2.0.16"
+solana-logger = "=2.0.16"
+solana-program = "=2.0.16"
+solana-program-test = "=2.0.16"
+solana-sdk = "=2.0.16"
+solana-test-validator = "=2.0.16"
+solana-rpc-client-api = "=2.0.16"
+solana-rpc = "=2.0.16"
+solana-transaction-status = "=2.0.16"
+spl-associated-token-account = "5.0.1"
+spl-pod = "0.4.0"
+spl-token = "6.0.0"
+spl-token-2022 = "5.0.2"
+spl-token-metadata-interface = "0.5.1"
+
+rand = "0.8"
+eyre = "0.6"
+color-eyre = "0.6"
+clap = { version = "4", features = ["derive"] }
+xshell = "0.2"
+futures = "0.3"
+derive_builder = "0.20"
+tokio = { version = "1", features = ["full"] }
+serde = "1"
+itertools = "0.12"
+thiserror = "1"
+reqwest = { version = "0.12", features = ["json", "stream"] }
+
+tracing = "0.1"
+tracing-error = "0.2"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 [profile.release]
 lto = true

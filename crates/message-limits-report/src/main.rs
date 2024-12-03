@@ -2,18 +2,19 @@ use std::backtrace::Backtrace;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
-use axelar_message_primitives::{DataPayload, EncodingScheme, U256};
-use axelar_rkyv_encoding::test_fixtures::random_weight;
-use axelar_rkyv_encoding::types::{HasheableMessageVec, Message, Payload};
+use axelar_executable::{EncodingScheme, PayloadError};
+use axelar_solana_encoding::hasher::NativeHasher;
+use axelar_solana_gateway::axelar_auth_weighted::RotationDelaySecs;
+use axelar_solana_gateway::error::GatewayError;
+use axelar_solana_gateway::{get_gateway_root_config_pda, get_verifier_set_tracker_pda};
+use axelar_solana_gateway_test_fixtures::test_signer::SigningVerifierSet;
+use clap::Parser;
+use contract_builder::solana::build_contracts;
 use derive_builder::Builder;
 use futures::StreamExt;
-use gmp_gateway::axelar_auth_weighted::RotationDelaySecs;
-use gmp_gateway::commands::OwnedCommand;
-use gmp_gateway::instructions::{InitializeConfig, VerifierSetWrapper};
-use gmp_gateway::state::{GatewayApprovedCommand, GatewayConfig, GatewayExecuteData};
-use itertools::izip;
+use itertools::{izip, Itertools};
 use rand::distributions::Alphanumeric;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
@@ -26,25 +27,64 @@ use solana_rpc_client_api::client_error::Error as RpcClientError;
 use solana_sdk::commitment_config::CommitmentConfig;
 use solana_sdk::compute_budget::ComputeBudgetInstruction;
 use solana_sdk::instruction::{AccountMeta, Instruction};
+use solana_sdk::program_error::ProgramError;
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::signature::Keypair;
 use solana_sdk::signer::Signer;
 use solana_sdk::transaction::Transaction;
 use solana_test_validator::{TestValidator, TestValidatorGenesis, UpgradeableProgramInfo};
 use solana_transaction_status::UiTransactionEncoding;
-use test_fixtures::axelar_message::custom_message;
-use test_fixtures::execute_data::prepare_execute_data;
-use test_fixtures::test_setup::{self, SigningVerifierSet};
 use tokio::fs::File;
 use tokio::sync::Mutex;
 use tracing::level_filters::LevelFilter;
+use tracing_subscriber::layer::{Layered, SubscriberExt};
+use tracing_subscriber::util::SubscriberInitExt;
+use tracing_subscriber::{fmt, reload, EnvFilter, Registry};
 
-use super::SolanaContract;
-use crate::change_log_level;
-use crate::cli::cmd::solana::{build_contracts, path};
+/// Iteratively send messages to the Solana Gateway, permuting different
+/// argument sizes and report the ones that succeed until the message
+/// limit is reached. The CSV report is written in the `output_dir`
+/// directory.
+#[derive(Parser)]
+#[command(version, about, long_about = None)]
+struct Cli {
+    /// Where to output the report
+    output_dir: PathBuf,
+
+    /// Enable ABI encoding scheme. When omitted, borsh
+    /// encoding is used.
+    #[arg(short, long)]
+    abi_encoding: bool,
+}
+
+#[tokio::main]
+async fn main() -> eyre::Result<()> {
+    let cli = Cli::try_parse()?;
+    color_eyre::install()?;
+    let env_filter = EnvFilter::builder()
+        .with_default_directive(LevelFilter::ERROR.into())
+        .from_env_lossy();
+
+    tracing_subscriber::registry()
+        .with(fmt::layer())
+        .with(env_filter)
+        // needed for colour eyre to give better error output
+        .with(tracing_error::ErrorLayer::default())
+        .init();
+
+    generate_message_limits_report(
+        &cli.output_dir,
+        if cli.abi_encoding {
+            EncodingScheme::AbiEncoding
+        } else {
+            EncodingScheme::Borsh
+        },
+    )
+    .await
+}
 
 const DEFAULT_MINIMUM_ROTATION_DELAY: RotationDelaySecs = 0;
-const DEFAULT_PREVIOUS_SIGNERS_RETENTION: U256 = U256::from_u64(4);
+const DEFAULT_PREVIOUS_SIGNERS_RETENTION: u128 = 4;
 const DOMAIN_SEPARATOR: [u8; 32] = [0u8; 32];
 const LEDGER_PATH: &str = "/tmp/ledger";
 const MAX_CONCURRENT_ITERATIONS: usize = 200;
@@ -75,8 +115,7 @@ static BREAK_ACCOUNTS_SIZE: AtomicBool = AtomicBool::new(false);
 /// - 3. initialize pending commands
 /// - 4. approve messages
 /// - 5. execute messages
-/// - 6. validate message execution (this is a  CPI from the memo program to the
-///   gateway)
+/// - 6. validate message execution (this is a  CPI from the memo program to the gateway)
 ///
 /// This is done with different combinations of message size, number of messages
 /// per transaction and number of signers. The combinations that end up in
@@ -87,8 +126,7 @@ pub(crate) async fn generate_message_limits_report(
     encoding: EncodingScheme,
 ) -> eyre::Result<()> {
     setup_panic_hook();
-    change_log_level(LevelFilter::ERROR);
-    build_contracts(Some(&[path::gateway_manifest(), path::memo_manifest()]))?;
+    build_contracts(None)?;
 
     let file_name = get_filename(encoding);
     let file_path = output_dir.join(file_name);
@@ -98,13 +136,14 @@ pub(crate) async fn generate_message_limits_report(
 
     'signers: for num_signers in SIGNERS_AMOUNT_RANGE {
         let (validator, keypair) = clean_ledger_setup_validator().await;
-        let initial_signers = test_setup::make_signers(
+        let initial_signers = axelar_solana_gateway_test_fixtures::gateway::make_verifier_set(
             &(0..num_signers)
-                .map(|_| random_weight().into())
-                .collect::<Vec<_>>(),
+                .map(|_| rand::random::<u128>())
+                .collect_vec(),
             NONCE,
             DOMAIN_SEPARATOR,
         );
+
         let keypair = Arc::new(keypair);
         let validator_rpc_client = Arc::new(validator.get_async_rpc_client());
         let (gateway_config_pda, counter) = initialize_programs(
@@ -193,16 +232,16 @@ enum Error {
     RpcClient(#[from] RpcClientError),
 
     #[error("Solana program error: {0}")]
-    Program(#[from] solana_sdk::program_error::ProgramError),
+    Program(#[from] ProgramError),
 
     #[error("Gateway error: {0}")]
-    Gateway(#[from] gmp_gateway::error::GatewayError),
+    Gateway(#[from] GatewayError),
 
     #[error("Error building the csv row: {0}")]
     RowBuilder(#[from] RowBuilderError),
 
     #[error("Error encoding data payload: {0}")]
-    Payload(#[from] axelar_message_primitives::PayloadError),
+    Payload(#[from] PayloadError),
 
     #[error("Unexpected error: {0}")]
     Unexpected(#[from] Box<dyn std::error::Error + Send + Sync>),
@@ -258,18 +297,21 @@ async fn initialize_programs(
     keypair: Arc<Keypair>,
     validator_rpc_client: Arc<RpcClient>,
 ) -> Result<(Pubkey, (Pubkey, u8)), Error> {
-    let (gateway_config_pda, _) = GatewayConfig::pda();
-    let verifier_set = VerifierSetWrapper::new_from_verifier_set(initial_signers.verifier_set())?;
-    let initialize_config = InitializeConfig {
-        domain_separator: DOMAIN_SEPARATOR,
-        initial_signer_sets: vec![verifier_set],
-        minimum_rotation_delay: DEFAULT_MINIMUM_ROTATION_DELAY,
-        operator: Pubkey::new_unique(),
-        previous_signers_retention: DEFAULT_PREVIOUS_SIGNERS_RETENTION,
-    };
-    let instruction = gmp_gateway::instructions::initialize_config(
+    let (gateway_config_pda, _) = get_gateway_root_config_pda();
+    let vs_hash = axelar_solana_encoding::types::verifier_set::verifier_set_hash::<NativeHasher>(
+        &initial_signers.verifier_set(),
+        &DOMAIN_SEPARATOR,
+    )
+    .unwrap();
+    let (vs_tracker_pda, vs_tracker_bump) = get_verifier_set_tracker_pda(vs_hash);
+
+    let instruction = axelar_solana_gateway::instructions::initialize_config(
         keypair.pubkey(),
-        initialize_config,
+        DOMAIN_SEPARATOR,
+        vec![(vs_hash, vs_tracker_pda, vs_tracker_bump)],
+        DEFAULT_MINIMUM_ROTATION_DELAY,
+        keypair.pubkey(),
+        DEFAULT_PREVIOUS_SIGNERS_RETENTION.into(),
         gateway_config_pda,
     )?;
 

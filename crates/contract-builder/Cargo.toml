@@ -1,0 +1,22 @@
+[package]
+name = "contract-builder"
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+eyre.workspace = true
+color-eyre.workspace = true
+cargo_metadata = "0.19"
+flate2 = "1.0"
+tar = "0.4"
+futures.workspace = true
+reqwest.workspace = true
+tracing.workspace = true
+xshell.workspace = true
+
+[lints]
+workspace = true

@@ -6,12 +6,15 @@ pub(crate) mod solana_interactions;
 use std::str::FromStr;
 use std::time::Duration;
 
-use axelar_message_primitives::DataPayload;
+use axelar_executable::{AxelarExecutablePayload, AxelarMessagePayload};
+use axelar_solana_encoding::types::execute_data::{self, ExecuteData, MerkleisedPayload};
+use axelar_solana_gateway::{get_gateway_root_config_pda, state};
+use color_eyre::owo_colors::OwoColorize;
 use ethers::types::{Address as EvmAddress, H160};
 use evm_contracts_test_suite::EvmSigner;
 use eyre::OptionExt;
-use gmp_gateway::hasher_impl;
 use solana_sdk::signature::Keypair;
+use solana_sdk::signer::Signer;
 
 use super::axelar_deployments::{AxelarDeploymentRoot, EvmChain};
 use super::cosmwasm::cosmos_client::signer::SigningClient;
@@ -64,10 +67,9 @@ pub(crate) async fn evm_to_solana(
         .evm_deployments
         .get_or_insert_mut(source_chain);
 
-    let root_pda = gmp_gateway::get_gateway_root_config_pda().0;
+    let root_pda = get_gateway_root_config_pda().0;
     let root_pda = solana_rpc_client.get_account(&root_pda).unwrap();
-    let account_data =
-        borsh::from_slice::<gmp_gateway::state::GatewayConfig>(&root_pda.data).unwrap();
+    let account_data = borsh::from_slice::<state::GatewayConfig>(&root_pda.data).unwrap();
     tracing::info!(?account_data, "solana gateway root pda config");
 
     let tx = send_memo_to_solana(
@@ -89,7 +91,7 @@ pub(crate) async fn evm_to_solana(
     }
     tokio::time::sleep(Duration::from_secs(30)).await;
     let (payload, message) = evm_interaction::create_axelar_message_from_evm_log(&tx, source_chain);
-    let decoded_payload = DataPayload::decode(payload.0.as_ref()).unwrap();
+    let decoded_payload = AxelarMessagePayload::decode(payload.0.as_ref()).unwrap();
     let execute_data = cosmwasm_interactions::wire_cosmwasm_contracts(
         source_chain.id.as_str(),
         destination_chain_name,
@@ -102,61 +104,54 @@ pub(crate) async fn evm_to_solana(
         &solana_deployments.axelar_configuration,
     )
     .await?;
-    let gateway_root_pda = gmp_gateway::get_gateway_root_config_pda().0;
-    let decoded_execute_data =
-        axelar_rkyv_encoding::types::ExecuteData::from_bytes(&execute_data).unwrap();
-    let signing_verifier_set = decoded_execute_data
-        .proof
-        .verifier_set(solana_deployments.solana_configuration.domain_separator);
-    let (signing_verifier_set_pda, _) = gmp_gateway::get_verifier_set_tracker_pda(
-        &gmp_gateway::id(),
-        signing_verifier_set.hash(hasher_impl()),
-    );
+    let gateway_root_pda = get_gateway_root_config_pda().0;
+    let execute_data = borsh::from_slice::<ExecuteData>(&execute_data)?;
 
-    // solana: initialize pending command pdas
-    let (gateway_approved_message_pda, message) =
-        solana_interactions::solana_init_approved_command(
-            &gateway_root_pda,
-            &message,
+    // init payload approval session
+    let (session_pda, bump) = solana_interactions::solana_start_verification_session(
+        &solana_keypair,
+        gateway_root_pda,
+        execute_data.payload_merkle_root,
+        &solana_rpc_client,
+    )?;
+
+    // verify each signature
+    for sig in execute_data.signing_verifier_set_leaves {
+        solana_interactions::solana_verify_signature(
             &solana_keypair,
+            gateway_root_pda,
+            session_pda,
+            execute_data.payload_merkle_root,
+            sig,
             &solana_rpc_client,
-            &solana_deployments.solana_configuration,
         )?;
+    }
 
-    // update execute data
-    let execute_data_pda = solana_interactions::solana_init_approve_messages_execute_data(
-        &solana_keypair,
-        gateway_root_pda,
-        &execute_data,
-        &solana_rpc_client,
-        &solana_deployments.solana_configuration,
-    )?;
-
-    // call `approve messages`
-    solana_interactions::solana_approve_messages(
-        execute_data_pda,
-        gateway_root_pda,
-        gateway_approved_message_pda,
-        signing_verifier_set_pda,
-        &solana_rpc_client,
-        &solana_keypair,
-    )?;
-
-    // call the destination memo program
-    solana_interactions::solana_call_executable(
-        message,
-        &decoded_payload,
-        gateway_approved_message_pda,
-        gateway_root_pda,
-        &solana_rpc_client,
-        &solana_keypair,
-    )?;
-
-    let (counter_pda, _counter_bump) =
-        axelar_solana_memo_program::get_counter_pda(&gateway_root_pda);
-    let acc = solana_rpc_client.get_account(&counter_pda).unwrap();
-    let acc = borsh::from_slice::<axelar_solana_memo_program::state::Counter>(&acc.data).unwrap();
-    tracing::info!(counter_pda =? acc, "counter PDA");
+    // send the actual message
+    match execute_data.payload_items {
+        MerkleisedPayload::VerifierSetRotation {
+            new_verifier_set_merkle_root,
+        } => todo!(),
+        MerkleisedPayload::NewMessages { messages } => {
+            for message in messages {
+                let (message_pda, message_bump) = solana_interactions::solana_approve_message(
+                    &solana_keypair,
+                    gateway_root_pda,
+                    session_pda,
+                    execute_data.payload_merkle_root,
+                    message.clone(),
+                    &solana_rpc_client,
+                )?;
+                solana_interactions::solana_call_executable(
+                    message.leaf.message,
+                    &payload.to_vec(),
+                    message_pda,
+                    &solana_rpc_client,
+                    &solana_keypair,
+                )?;
+            }
+        }
+    };
     Ok(())
 }
 
@@ -205,7 +200,7 @@ pub(crate) async fn solana_to_evm(
         .and_then(|x| cosmrs::AccountId::from_str(x.address.as_str()).ok())
         .unwrap();
 
-    let gateway_root_pda = gmp_gateway::get_gateway_root_config_pda().0;
+    let gateway_root_pda = get_gateway_root_config_pda().0;
     let (payload, message) = solana_interactions::send_memo_from_solana(
         &solana_rpc_client,
         &gateway_root_pda,

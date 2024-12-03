@@ -1,0 +1,90 @@
+[package]
+name = "script"
+version = "0.1.0"
+edition = "2021"
+
+[lints.clippy]
+complexity = { priority = -1, level = "deny" }
+correctness = { priority = -1, level = "deny" }
+pedantic = { priority = -1, level = "deny" }
+
+[lints.rust]
+missing_docs = "warn"
+rust_2018_idioms = "deny"
+unreachable_pub = "warn"
+unused_imports = "warn"
+unused_must_use = "deny"
+
+[dependencies]
+contract-builder.workspace = true
+
+# Our crates
+gateway-event-stack.workspace = true
+axelar-executable.workspace = true
+axelar-solana-encoding.workspace = true
+axelar-solana-memo-program.workspace = true
+axelar-solana-gateway.workspace = true
+evm-contracts-test-suite.workspace = true
+
+# Amplifier crates
+# https://github.com/eigerco/axelar-amplifier.git
+gateway = { git = "https://github.com/eigerco/axelar-amplifier.git", rev = "40790eb", features = ["library"] }
+gateway-api = { git = "https://github.com/eigerco/axelar-amplifier.git", rev = "40790eb" }
+multisig = { git = "https://github.com/eigerco/axelar-amplifier.git", rev = "40790eb", features = ["library"] }
+router-api = { git = "https://github.com/eigerco/axelar-amplifier.git", rev = "40790eb" }
+axelar-wasm-std = { git = "https://github.com/eigerco/axelar-amplifier.git", rev = "40790eb" }
+voting-verifier = { git = "https://github.com/eigerco/axelar-amplifier.git", rev = "40790eb", features = ["library"] }
+
+# Util crates
+base64 = "0.21"
+walkdir = "2"
+bip39 = { version = "2", features = ["rand"] }
+borsh = { version = "1", features = ["derive"] }
+clap.workspace = true
+color-eyre.workspace = true
+const_format = { version = "0.2", features = ["fmt"] }
+cosmrs = { version = "0.16", features = ["cosmwasm", "rpc", "grpc"] }
+cosmwasm-schema = "2"
+cosmwasm-std = "1.5"
+derive_builder.workspace = true
+ethers = "2"
+ethers-core = "2"
+eyre.workspace = true
+futures.workspace = true
+hex = "0.4"
+inquire = "0.7.5"
+itertools.workspace = true
+k256 = "0.13"
+rand.workspace = true
+regex = "1.10"
+rust_decimal = "1.34"
+rust_decimal_macros = "1.34"
+serde.workspace = true
+serde_json = "1"
+simd-json = "0.13"
+solana-cli-config.workspace = true
+solana-client.workspace = true
+solana-logger.workspace = true
+solana-program.workspace = true
+solana-program-test.workspace = true
+solana-sdk.workspace = true
+solana-test-validator.workspace = true
+solana-rpc-client-api.workspace = true
+solana-rpc.workspace = true
+solana-transaction-status.workspace = true
+spl-associated-token-account.workspace = true
+spl-pod.workspace = true
+spl-token.workspace = true
+spl-token-2022.workspace = true
+spl-token-metadata-interface.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+url = "2"
+xshell.workspace = true
+tracing.workspace = true
+tracing-error.workspace = true
+tracing-subscriber.workspace = true
+
+[dev-dependencies]
+solana-streamer = "2.0.1"
+tempfile = "3"

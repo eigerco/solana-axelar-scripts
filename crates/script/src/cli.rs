@@ -3,16 +3,16 @@ use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
 
-use axelar_message_primitives::EncodingScheme;
+use axelar_solana_gateway::axelar_auth_weighted::RotationDelaySecs;
 use clap::{Parser, Subcommand};
 use cmd::solana::SolanaContract;
+use contract_builder::scripts_crate_root_dir;
 use ethers::core::k256::ecdsa::SigningKey;
 use ethers::middleware::SignerMiddleware;
 use ethers::signers::coins_bip39::English;
 use ethers::signers::{LocalWallet, MnemonicBuilder, Signer};
 use ethers::utils::hex::ToHexExt;
 use eyre::{Context, OptionExt};
-use gmp_gateway::axelar_auth_weighted::RotationDelaySecs;
 use k256::SecretKey;
 use url::Url;
 
@@ -21,7 +21,6 @@ use self::cmd::cosmwasm::cosmos_client::signer::SigningClient;
 use self::cmd::deployments::{
     AxelarConfiguration, CustomEvmChainDeployments, SolanaDeploymentRoot,
 };
-use crate::cli::cmd::path::xtask_crate_root_dir;
 
 pub(crate) mod cmd;
 
@@ -188,19 +187,6 @@ pub(crate) enum Solana {
         program_id_keypair_path: PathBuf,
         // ---
         // TODO: expose "upgrade_authority"
-    },
-    /// Iteratively send messages to the Solana Gateway, permuting different
-    /// argument sizes and report the ones that succeed until the message
-    /// limit is reached. The CSV report is written in the `output_dir`
-    /// directory.
-    MessageLimitsReport {
-        /// Where to output the report
-        output_dir: PathBuf,
-
-        /// Enable ABI encoding scheme. When omitted, borsh
-        /// encoding is used.
-        #[arg(short, long)]
-        abi_encoding: bool,
     },
     Init {
         #[command(subcommand)]
@@ -452,7 +438,7 @@ async fn handle_solana(
 ) -> eyre::Result<()> {
     match command {
         Solana::Build => {
-            cmd::solana::build_contracts(None)?;
+            contract_builder::solana::build_contracts(None)?;
         }
         Solana::Deploy {
             contract,
@@ -468,18 +454,6 @@ async fn handle_solana(
                 url.as_ref(),
                 ws_url.as_ref(),
             )?;
-        }
-        Solana::MessageLimitsReport {
-            output_dir,
-            abi_encoding,
-        } => {
-            let encoding = if abi_encoding {
-                EncodingScheme::AbiEncoding
-            } else {
-                EncodingScheme::Borsh
-            };
-
-            cmd::solana::generate_message_limits_report(&output_dir, encoding).await?;
         }
         Solana::Init { contract } => match contract {
             SolanaInitSubcommand::GmpGateway {
@@ -561,7 +535,7 @@ async fn handle_cosmwasm(
 ) -> eyre::Result<()> {
     match command {
         Cosmwasm::Build => {
-            cmd::cosmwasm::build().await?;
+            contract_builder::cosmwasm_contract::build().await?;
         }
         Cosmwasm::Deploy {
             axelar_private_key_hex: private_key_hex,
@@ -706,7 +680,7 @@ fn create_axelar_cosmsos_signer(
 
 fn get_axelar_configuration(axelar_chain_name: &str) -> eyre::Result<AxelarDeploymentRoot> {
     let path = match axelar_chain_name {
-        "devnet-amplifier" => xtask_crate_root_dir().join("devnet-amplifier.json"),
+        "devnet-amplifier" => scripts_crate_root_dir().join("devnet-amplifier.json"),
         _ => eyre::bail!("invalid axelar chain name"),
     };
 

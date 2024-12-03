@@ -2,13 +2,13 @@ use std::collections::BTreeMap;
 use std::fs::OpenOptions;
 
 use axelar_wasm_std::msg_id::MessageIdFormat;
+use contract_builder::scripts_crate_root_dir;
 use multisig::key::KeyType;
 use multisig::verifier_set::VerifierSet;
 use solana_sdk::pubkey::Pubkey;
 
 use super::axelar_deployments::{AxelarChain, Contracts, Explorer};
 use super::cosmwasm::domain_separator;
-use super::path::xtask_crate_root_dir;
 use super::testnet::multisig_prover_api;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -88,7 +88,7 @@ impl SolanaDeploymentRoot {
 
 fn storage_file_path(solana_chain_name_on_axelar_chain: &str) -> std::path::PathBuf {
     let filename = storage_filename(solana_chain_name_on_axelar_chain);
-    xtask_crate_root_dir().join(filename)
+    scripts_crate_root_dir().join(filename)
 }
 
 fn storage_filename(solana_chain_name_on_axelar_chain: &str) -> String {
@@ -157,7 +157,7 @@ impl SolanaConfiguration {
             chain_name_on_axelar_chain: solana_chain_name_on_axelar_chain,
             domain_separator,
             rpc: solana_rpc,
-            gateway_program_id: gmp_gateway::id().to_string(),
+            gateway_program_id: axelar_solana_gateway::id().to_string(),
         }
     }
 }
@@ -194,7 +194,7 @@ pub(crate) struct SolanaGatewayDeployment {
     pub(crate) initial_signer_sets: Vec<VerifierSet>,
     pub(crate) minimum_rotation_delay: u64,
     pub(crate) operator: Pubkey,
-    pub(crate) previous_signers_retention: [u8; 32],
+    pub(crate) previous_signers_retention: u128,
     pub(crate) program_id: Pubkey,
     pub(crate) config_pda: Pubkey,
 }

@@ -1,6 +1,7 @@
 use std::io::Write;
 use std::str::FromStr;
 
+use contract_builder::cosmwasm_contract::{read_wasm_for_deployment, WasmContracts, CONTRACTS};
 use cosmrs::cosmwasm::{MsgExecuteContract, MsgInstantiateContract, MsgStoreCode};
 use cosmrs::tx::Msg;
 use cosmrs::Denom;
@@ -11,12 +12,8 @@ use rust_decimal_macros::dec;
 use solana_sdk::keccak::hashv;
 use xshell::Shell;
 
-mod build;
 pub(crate) mod cosmos_client;
 
-use build::{build_contracts, download_wasm_opt, setup_toolchain, unpack_tar_gz};
-
-use self::path::{binaryen_tar_file, binaryen_unpacked, wasm_opt_binary};
 use super::deployments::{AxelarConfiguration, SolanaDeploymentRoot};
 use crate::cli::cmd::cosmwasm::cosmos_client::gas::Gas;
 use crate::cli::cmd::cosmwasm::cosmos_client::signer::SigningClient;
@@ -24,44 +21,6 @@ use crate::cli::cmd::deployments::{
     AxelarGatewayDeployment, MultisigProverDeployment, VotingVerifierDeployment,
 };
 use crate::cli::cmd::testnet::multisig_prover_api;
-
-struct WasmContracts {
-    wasm_artifact_name: &'static str,
-    contract_project_folder: &'static str,
-}
-
-const CONTRACTS: [WasmContracts; 3] = [
-    WasmContracts {
-        wasm_artifact_name: "voting_verifier",
-        contract_project_folder: "voting-verifier",
-    },
-    WasmContracts {
-        wasm_artifact_name: "gateway",
-        contract_project_folder: "gateway",
-    },
-    WasmContracts {
-        wasm_artifact_name: "multisig_prover",
-        contract_project_folder: "multisig-prover",
-    },
-];
-
-pub(crate) async fn build() -> eyre::Result<()> {
-    let sh = Shell::new()?;
-
-    // install `wasm-opt` if it doesn't already exist
-    if !wasm_opt_binary().exists() {
-        tracing::info!("wasm opt does not exist - will download and unpack");
-        let binaryen_archive = binaryen_tar_file();
-        download_wasm_opt(binaryen_archive.as_path()).await?;
-        unpack_tar_gz(binaryen_archive.as_path(), binaryen_unpacked().as_path())?;
-    }
-
-    // set up `axelar-amplifier`-specific toolchain
-    setup_toolchain(&sh)?;
-    build_contracts(&sh, &wasm_opt_binary(), &CONTRACTS).await?;
-
-    Ok(())
-}
 
 #[tracing::instrument(skip_all)]
 pub(crate) async fn deploy(
@@ -433,29 +392,18 @@ pub(crate) fn generate_wallet() -> eyre::Result<()> {
     Ok(())
 }
 
-fn read_wasm_for_deployment(wasm_artifact_name: &str) -> eyre::Result<Vec<u8>> {
-    let wasm = path::optimised_wasm_output(wasm_artifact_name);
-    let wasm = std::fs::read(wasm)?;
-    let mut output = Vec::with_capacity(wasm.len());
-    flate2::write::GzEncoder::new(&mut output, flate2::Compression::best())
-        .write_all(&wasm)
-        .unwrap();
-    tracing::info!(bytes = output.len(), "wasm module found");
-    Ok(output)
-}
-
 pub(crate) mod ampd {
 
     use std::thread;
 
+    use contract_builder::{
+        ampd_bin, ampd_home_dir, axelar_amplifier_dir, scripts_crate_root_dir, workspace_root_dir,
+    };
     use inquire::Confirm;
     use tracing::info;
     use xshell::Shell;
 
-    use super::path::axelar_amplifier_dir;
-    use crate::cli::cmd::cosmwasm::path::{self, ampd_home_dir};
     use crate::cli::cmd::deployments::SolanaDeploymentRoot;
-    use crate::cli::cmd::path::{workspace_root_dir, xtask_crate_root_dir};
 
     pub(crate) async fn setup_ampd(deployment_root: &SolanaDeploymentRoot) -> eyre::Result<()> {
         if !Confirm::new("Welcome to ampd-setup ! This will perform/guide you through the verifier onboarding process described here https://docs.axelar.dev/validator/amplifier/verifier-onboarding (devnet-amplifier chain).
@@ -469,12 +417,12 @@ pub(crate) mod ampd {
         build_ampd()?;
         let sh = xshell::Shell::new()?;
         let _dir = sh.push_dir(axelar_amplifier_dir());
-        let ampd_build_path = path::ampd_bin();
+        let ampd_build_path = ampd_bin();
 
         info!("Copying Solana ampd configuration template to $HOME/.ampd/config.toml");
         tokio::fs::create_dir_all(ampd_home_dir()).await?;
         tokio::fs::copy(
-            xtask_crate_root_dir().join("ampd-config.toml"),
+            scripts_crate_root_dir().join("ampd-config.toml"),
             ampd_home_dir().join("config.toml"),
         )
         .await?;
@@ -638,75 +586,9 @@ pub(crate) mod ampd {
         // spawn ampd
         tracing::info!("spawning ampd");
         let sh = Shell::new()?;
-        sh.cmd(path::ampd_bin()).run()?;
+        sh.cmd(ampd_bin()).run()?;
 
         Ok(())
-    }
-}
-
-pub(crate) mod path {
-    use std::path::PathBuf;
-
-    use cargo_metadata::{MetadataCommand, Package};
-    use color_eyre::owo_colors::OwoColorize;
-    use walkdir::WalkDir;
-
-    use crate::cli::cmd::path::{home_dir, workspace_root_dir};
-
-    /// This points to the git checkout path of `axelar-amplifier`
-    pub(crate) fn axelar_amplifier_dir() -> PathBuf {
-        let metadata = MetadataCommand::new()
-            .exec()
-            .expect("Failed to retrieve Cargo metadata");
-        let mut axelar_amplifier_dir = None;
-        for package in metadata.packages {
-            if package.name.starts_with("axelar-wasm-std") {
-                axelar_amplifier_dir = package
-                    .manifest_path
-                    .parent()
-                    .unwrap()
-                    .parent()
-                    .unwrap()
-                    .parent()
-                    .map(|p| p.to_path_buf().into_std_path_buf());
-                tracing::info!(?axelar_amplifier_dir, "pkg");
-                break;
-            }
-        }
-        axelar_amplifier_dir.unwrap()
-    }
-
-    pub(crate) fn wasm_opt_binary() -> PathBuf {
-        binaryen_unpacked()
-            .join("binaryen-version_117")
-            .join("bin")
-            .join("wasm-opt")
-    }
-
-    pub(crate) fn ampd_home_dir() -> PathBuf {
-        home_dir().join(".ampd")
-    }
-
-    pub(crate) fn binaryen_tar_file() -> PathBuf {
-        workspace_root_dir().join("target").join("binaryen.tar.gz")
-    }
-
-    pub(crate) fn binaryen_unpacked() -> PathBuf {
-        workspace_root_dir().join("target").join("binaryen")
-    }
-
-    pub(crate) fn optimised_wasm_output(contract_name: &str) -> PathBuf {
-        axelar_amplifier_dir()
-            .join("target")
-            .join("wasm32-unknown-unknown")
-            .join("release")
-            .join(format!("{contract_name}.optimised.wasm"))
-    }
-    pub(crate) fn ampd_bin() -> PathBuf {
-        axelar_amplifier_dir()
-            .join("target")
-            .join("debug")
-            .join("ampd")
     }
 }
 

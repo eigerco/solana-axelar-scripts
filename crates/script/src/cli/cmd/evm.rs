@@ -51,7 +51,7 @@ pub(crate) async fn send_memo_to_solana(
         memo_contract_address,
         signer.signer.clone(),
     );
-    let gateway_root_pda = gmp_gateway::get_gateway_root_config_pda().0;
+    let gateway_root_pda = axelar_solana_gateway::get_gateway_root_config_pda().0;
     let (counter_pda, _counter_bump) =
         axelar_solana_memo_program::get_counter_pda(&gateway_root_pda);
     let counter_account = axelar_memo::SolanaAccountRepr {
