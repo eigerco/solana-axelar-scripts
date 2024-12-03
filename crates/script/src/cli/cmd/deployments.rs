@@ -122,7 +122,7 @@ impl AxelarConfiguration {
     fn new_from_axelar_chain_deployment(axelar: AxelarChain) -> Self {
         Self {
             axelar_base_denom: axelar.contracts.rewards.rewards_denom.clone(),
-            multisig_prover_encoder: "rkyv".to_string(),
+            multisig_prover_encoder: "solana".to_string(),
             verifier_key_type: KeyType::Ecdsa,
             axelar_chain: axelar,
             axelar_account_prefix: "axelar".to_string(),
