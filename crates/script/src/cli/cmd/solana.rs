@@ -6,8 +6,8 @@ use std::str::FromStr;
 use axelar_solana_encoding::hasher::NativeHasher;
 use axelar_solana_encoding::types::pubkey::PublicKey;
 use axelar_solana_encoding::types::verifier_set::VerifierSet;
-use axelar_solana_gateway::axelar_auth_weighted::RotationDelaySecs;
 use axelar_solana_gateway::get_gateway_root_config_pda;
+use axelar_solana_gateway::state::config::RotationDelaySecs;
 use contract_builder::solana::contracts_artifact_dir;
 use eyre::OptionExt;
 use solana_client::rpc_client::RpcClient;
@@ -124,7 +124,7 @@ pub(crate) async fn init_gmp_gateway(
     let initialize_config = axelar_solana_gateway::instructions::initialize_config(
         payer_kp.pubkey(),
         solana_deployment_root.solana_configuration.domain_separator,
-        vec![(verifier_set_hash, ini_tracker_pda.0, ini_tracker_pda.1)],
+        vec![(verifier_set_hash, ini_tracker_pda.0)],
         minimum_rotation_delay,
         payer_kp.pubkey(),
         previous_signers_retention.into(),

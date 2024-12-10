@@ -3,7 +3,7 @@ use std::str::FromStr;
 use ethers::types::{Address, TransactionReceipt, H160};
 use ethers::utils::hex::ToHexExt;
 use evm_contracts_test_suite::evm_contracts_rs::contracts::{
-    axelar_amplifier_gateway, axelar_memo,
+    axelar_amplifier_gateway, axelar_memo, interchain_token_service,
 };
 use evm_contracts_test_suite::{await_receipt, ContractMiddleware, EvmSigner};
 use eyre::OptionExt;
@@ -14,6 +14,7 @@ use super::deployments::CustomEvmChainDeployments;
 pub(crate) async fn deploy_axelar_memo(
     signer: EvmSigner,
     gateway: Address,
+    its: Address,
     our_evm_deployment_tracker: &mut CustomEvmChainDeployments,
 ) -> eyre::Result<Address> {
     tracing::info!("about to deploy AxelarMemo program");
@@ -21,8 +22,12 @@ pub(crate) async fn deploy_axelar_memo(
         gateway,
         signer.signer.clone(),
     );
+    let its = interchain_token_service::InterchainTokenService::<ContractMiddleware>::new(
+        its,
+        signer.signer.clone(),
+    );
     let contract = signer
-        .deploy_axelar_memo(gateway)
+        .deploy_axelar_memo(gateway, Some(its))
         .await
         .map_err(|err| eyre::eyre!(err))?;
     tracing::info!(memo_program =? contract.address(), "EVM Axelar Memo deployed");

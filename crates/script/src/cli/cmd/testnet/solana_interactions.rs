@@ -189,14 +189,14 @@ pub(crate) fn solana_approve_message(
     payload_merkle_root: [u8; 32],
     merkelised_message: MerkleisedMessage,
     solana_rpc_client: &solana_client::rpc_client::RpcClient,
-) -> eyre::Result<(Pubkey, u8)> {
+) -> eyre::Result<Pubkey> {
     tracing::info!("solana gateway.verify_signature");
 
     let command_id = command_id(
         merkelised_message.leaf.message.cc_id.chain.as_str(),
         merkelised_message.leaf.message.cc_id.id.as_str(),
     );
-    let (pda, bump) = axelar_solana_gateway::get_incoming_message_pda(&command_id);
+    let (pda, _bump) = axelar_solana_gateway::get_incoming_message_pda(&command_id);
     let ix = axelar_solana_gateway::instructions::approve_messages(
         merkelised_message,
         payload_merkle_root,
@@ -204,7 +204,6 @@ pub(crate) fn solana_approve_message(
         solana_keypair.pubkey(),
         verification_session_tracker_pda,
         pda,
-        bump,
     )?;
 
     send_solana_tx(
@@ -215,7 +214,7 @@ pub(crate) fn solana_approve_message(
         ],
         solana_keypair,
     )?;
-    Ok((pda, bump))
+    Ok(pda)
 }
 
 pub(crate) fn send_solana_tx(

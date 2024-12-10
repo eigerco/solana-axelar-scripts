@@ -27,13 +27,12 @@ axelar-solana-gateway.workspace = true
 evm-contracts-test-suite.workspace = true
 
 # Amplifier crates
-# https://github.com/eigerco/axelar-amplifier.git
-gateway = { git = "https://github.com/eigerco/axelar-amplifier.git", rev = "40790eb", features = ["library"] }
-gateway-api = { git = "https://github.com/eigerco/axelar-amplifier.git", rev = "40790eb" }
-multisig = { git = "https://github.com/eigerco/axelar-amplifier.git", rev = "40790eb", features = ["library"] }
-router-api = { git = "https://github.com/eigerco/axelar-amplifier.git", rev = "40790eb" }
-axelar-wasm-std = { git = "https://github.com/eigerco/axelar-amplifier.git", rev = "40790eb" }
-voting-verifier = { git = "https://github.com/eigerco/axelar-amplifier.git", rev = "40790eb", features = ["library"] }
+gateway = { git = "https://github.com/eigerco/axelar-amplifier.git", rev = "421baa3", features = ["library"] }
+gateway-api = { git = "https://github.com/eigerco/axelar-amplifier.git", rev = "421baa3" }
+multisig = { git = "https://github.com/eigerco/axelar-amplifier.git", rev = "421baa3", features = ["library"] }
+router-api = { git = "https://github.com/eigerco/axelar-amplifier.git", rev = "421baa3" }
+axelar-wasm-std = { git = "https://github.com/eigerco/axelar-amplifier.git", rev = "421baa3" }
+voting-verifier = { git = "https://github.com/eigerco/axelar-amplifier.git", rev = "421baa3", features = ["library"] }
 
 # Util crates
 base64 = "0.21"

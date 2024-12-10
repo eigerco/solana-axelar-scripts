@@ -10,6 +10,7 @@ pub fn axelar_amplifier_dir() -> PathBuf {
     get_manifest_path_for_git_dep("axelar-wasm-std")
 }
 
+/// Get path to the axelar solana repo
 #[must_use]
 pub fn axelar_solana_dir() -> PathBuf {
     get_manifest_path_for_git_dep("axelar-solana-gateway")
@@ -38,11 +39,13 @@ pub(crate) fn get_manifest_path_for_git_dep(desired_package_name: &str) -> PathB
     pkg.unwrap()
 }
 
+/// ampd ~/.ampd directory
 #[must_use]
 pub fn ampd_home_dir() -> PathBuf {
     home_dir().join(".ampd")
 }
 
+/// path to the ampd binary
 #[must_use]
 pub fn ampd_bin() -> PathBuf {
     axelar_amplifier_dir()
@@ -59,7 +62,7 @@ pub fn workspace_root_dir() -> PathBuf {
     PathBuf::from(dir).parent().unwrap().to_owned()
 }
 
-// Return the [`PathBuf`] that points to the `[repo]/script` folder
+/// Return the [`PathBuf`] that points to the `[repo]/script` folder
 #[must_use]
 pub fn scripts_crate_root_dir() -> PathBuf {
     self::workspace_root_dir().join("script")
@@ -74,6 +77,7 @@ pub fn home_dir() -> PathBuf {
     std::env::home_dir().unwrap()
 }
 
+/// solana contract utilities
 pub mod solana {
     use std::path::PathBuf;
 
@@ -81,12 +85,14 @@ pub mod solana {
 
     use crate::axelar_solana_dir;
 
+    /// build the solana programs
     #[tracing::instrument(skip_all)]
     pub fn build_contracts() -> eyre::Result<()> {
         let sh = Shell::new()?;
         sh.change_dir(axelar_solana_dir());
         let contracts = [
             "programs/axelar-solana-gateway/Cargo.toml",
+            "programs/axelar-solana-memo-program/Cargo.toml",
             "programs/axelar-solana-multicall/Cargo.toml",
             "programs/axelar-solana-its/Cargo.toml",
             "programs/axelar-solana-governance/Cargo.toml",
@@ -98,12 +104,14 @@ pub mod solana {
         Ok(())
     }
 
+    /// get path tho the axelar solana program artifacts
     #[must_use]
     pub fn contracts_artifact_dir() -> PathBuf {
         axelar_solana_dir().join("target").join("deploy")
     }
 }
 
+/// cosmwasm contact utilities
 pub mod cosmwasm_contract {
     use std::io::Write as _;
     use std::path::{Path, PathBuf};
@@ -115,12 +123,16 @@ pub mod cosmwasm_contract {
 
     use crate::{axelar_amplifier_dir, workspace_root_dir};
 
+    /// A cosmwasm contract in the amplifier repo
     #[derive(Debug)]
     pub struct WasmContracts {
+        /// name
         pub wasm_artifact_name: &'static str,
+        /// path in the `contracts` folder
         pub contract_project_folder: &'static str,
     }
 
+    /// All cosmwasm contracts that we need to interact with
     pub const CONTRACTS: [WasmContracts; 3] = [
         WasmContracts {
             wasm_artifact_name: "voting_verifier",
@@ -136,6 +148,7 @@ pub mod cosmwasm_contract {
         },
     ];
 
+    /// build the cosmwasm contracts
     #[tracing::instrument(err)]
     pub async fn build() -> eyre::Result<()> {
         let sh = Shell::new()?;
@@ -155,8 +168,9 @@ pub mod cosmwasm_contract {
         Ok(())
     }
 
+    /// build the cosmwasm contracts
     #[tracing::instrument(err)]
-    pub async fn build_contracts(
+    async fn build_contracts(
         sh: &Shell,
         wasm_opt: &Path,
         contracts: &[WasmContracts],
@@ -202,6 +216,7 @@ pub mod cosmwasm_contract {
             .join(format!("{contract_name}.optimised.wasm"))
     }
 
+    /// Get the binary to the wasm artifact
     pub fn read_wasm_for_deployment(wasm_artifact_name: &str) -> eyre::Result<Vec<u8>> {
         let wasm = optimised_wasm_output(wasm_artifact_name);
         let wasm = std::fs::read(wasm)?;

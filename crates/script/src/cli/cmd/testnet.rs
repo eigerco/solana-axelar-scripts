@@ -6,9 +6,9 @@ pub(crate) mod solana_interactions;
 use std::str::FromStr;
 use std::time::Duration;
 
-use axelar_executable::AxelarMessagePayload;
 use axelar_solana_encoding::types::execute_data::{ExecuteData, MerkleisedPayload};
-use axelar_solana_gateway::{get_gateway_root_config_pda, state};
+use axelar_solana_gateway::get_gateway_root_config_pda;
+use axelar_solana_gateway::state::{BytemuckedPda, GatewayConfig};
 use ethers::types::{Address as EvmAddress, H160};
 use evm_contracts_test_suite::EvmSigner;
 use eyre::OptionExt;
@@ -67,7 +67,7 @@ pub(crate) async fn evm_to_solana(
 
     let root_pda = get_gateway_root_config_pda().0;
     let root_pda = solana_rpc_client.get_account(&root_pda).unwrap();
-    let account_data = borsh::from_slice::<state::GatewayConfig>(&root_pda.data).unwrap();
+    let account_data = GatewayConfig::read(&root_pda.data).unwrap();
     tracing::info!(?account_data, "solana gateway root pda config");
 
     let tx = send_memo_to_solana(
@@ -89,7 +89,6 @@ pub(crate) async fn evm_to_solana(
     }
     tokio::time::sleep(Duration::from_secs(30)).await;
     let (payload, message) = evm_interaction::create_axelar_message_from_evm_log(&tx, source_chain);
-    let decoded_payload = AxelarMessagePayload::decode(payload.0.as_ref()).unwrap();
     let execute_data = cosmwasm_interactions::wire_cosmwasm_contracts(
         source_chain.id.as_str(),
         destination_chain_name,
@@ -106,7 +105,7 @@ pub(crate) async fn evm_to_solana(
     let execute_data = borsh::from_slice::<ExecuteData>(&execute_data)?;
 
     // init payload approval session
-    let (session_pda, bump) = solana_interactions::solana_start_verification_session(
+    let (session_pda, _bump) = solana_interactions::solana_start_verification_session(
         &solana_keypair,
         gateway_root_pda,
         execute_data.payload_merkle_root,
@@ -127,12 +126,10 @@ pub(crate) async fn evm_to_solana(
 
     // send the actual message
     match execute_data.payload_items {
-        MerkleisedPayload::VerifierSetRotation {
-            new_verifier_set_merkle_root,
-        } => todo!(),
+        MerkleisedPayload::VerifierSetRotation { .. } => todo!(),
         MerkleisedPayload::NewMessages { messages } => {
             for message in messages {
-                let (message_pda, message_bump) = solana_interactions::solana_approve_message(
+                let message_pda = solana_interactions::solana_approve_message(
                     &solana_keypair,
                     gateway_root_pda,
                     session_pda,

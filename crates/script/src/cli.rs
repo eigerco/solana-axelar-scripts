@@ -3,7 +3,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
 
-use axelar_solana_gateway::axelar_auth_weighted::RotationDelaySecs;
+use axelar_solana_gateway::state::config::RotationDelaySecs;
 use clap::{Parser, Subcommand};
 use cmd::solana::SolanaContract;
 use contract_builder::scripts_crate_root_dir;
@@ -151,7 +151,9 @@ pub(crate) enum CosmwasmInit {
 /// as we do on Solana.
 #[derive(Subcommand)]
 pub(crate) enum Evm {
-    DeployAxelarMemo {},
+    DeployAxelarMemo {
+        its_address: String,
+    },
     SendMemoToSolana {
         #[arg(short, long)]
         memo_to_send: String,
@@ -289,6 +291,7 @@ async fn handle_testnet(
                 .get_or_insert_mut(&source_chain);
             maybe_deploy_evm_memo_contract(
                 &source_evm_signer,
+                ethers::types::Address::zero(),
                 &source_chain,
                 source_evm_deployment_tracker,
             )
@@ -298,6 +301,7 @@ async fn handle_testnet(
                 .get_or_insert_mut(&destination_chain);
             maybe_deploy_evm_memo_contract(
                 &destination_evm_signer,
+                ethers::types::Address::zero(),
                 &destination_chain,
                 destination_evm_deployment_tracker,
             )
@@ -334,6 +338,7 @@ async fn handle_testnet(
                 .get_or_insert_mut(&source_chain);
             let _source_memo_contract = maybe_deploy_evm_memo_contract(
                 &source_evm_signer,
+                ethers::types::Address::zero(),
                 &source_chain,
                 source_evm_deployment_tracker,
             )
@@ -375,6 +380,7 @@ async fn handle_testnet(
                 .get_or_insert_mut(&destination_chain);
             let destination_memo_contract = maybe_deploy_evm_memo_contract(
                 &destination_evm_signer,
+                ethers::types::Address::zero(),
                 &destination_chain,
                 destination_evm_deployment_tracker,
             )
@@ -405,6 +411,7 @@ async fn handle_testnet(
 #[tracing::instrument(skip_all)]
 async fn maybe_deploy_evm_memo_contract(
     evm_signer: &evm_contracts_test_suite::EvmSigner,
+    its_address: ethers::types::Address,
     chain: &EvmChain,
     our_evm_deployment: &mut CustomEvmChainDeployments,
 ) -> Result<ethers::types::H160, eyre::Error> {
@@ -424,6 +431,7 @@ async fn maybe_deploy_evm_memo_contract(
             .address
             .parse()
             .unwrap(),
+        its_address,
         our_evm_deployment,
     )
     .await?;
@@ -491,10 +499,11 @@ async fn handle_evm(
     let chain = axelar_deployment_root.get_evm_chain(chain.as_str())?;
     let signer = create_evm_signer(&chain, admin_private_key).await;
     match command {
-        Evm::DeployAxelarMemo {} => {
+        Evm::DeployAxelarMemo { its_address } => {
             let deployment_tracker = solana_deployment_root
                 .evm_deployments
                 .get_or_insert_mut(&chain);
+            let its_address = ethers::types::Address::from_str(&its_address)?;
             let res = cmd::evm::deploy_axelar_memo(
                 signer.clone(),
                 chain
@@ -505,6 +514,7 @@ async fn handle_evm(
                     .address
                     .parse()
                     .unwrap(),
+                its_address,
                 deployment_tracker,
             )
             .await?;
