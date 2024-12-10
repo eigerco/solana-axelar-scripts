@@ -38,6 +38,7 @@ pub(crate) async fn deploy(
     Ok(())
 }
 
+#[tracing::instrument(skip_all)]
 async fn deploy_contract(
     contract: &WasmContracts,
     client: &SigningClient,
