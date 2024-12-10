@@ -11,7 +11,6 @@ use axelar_solana_gateway::state::config::RotationDelaySecs;
 use contract_builder::solana::contracts_artifact_dir;
 use eyre::OptionExt;
 use solana_client::rpc_client::RpcClient;
-use solana_sdk::pubkey::Pubkey;
 use solana_sdk::signature::Signer;
 use tracing::info;
 use url::Url;
@@ -63,8 +62,8 @@ pub(crate) fn deploy(
     info!("Compiled {}", contract);
 
     info!("Starting deploying {}", contract);
-    let pub_key = deploy_contract(contract, program_id, keypair_path, url, ws_url)?;
-    info!("Deployed {contract} at {pub_key:?}");
+    deploy_contract(contract, program_id, keypair_path, url, ws_url)?;
+    info!("Deployed {contract}");
     Ok(())
 }
 
@@ -187,7 +186,7 @@ fn deploy_contract(
     keypair_path: Option<&PathBuf>,
     url: Option<&Url>,
     ws_url: Option<&Url>,
-) -> eyre::Result<Pubkey> {
+) -> eyre::Result<()> {
     let contract_compiled_binary = contracts_artifact_dir().join(contract.file());
     let sh = Shell::new()?;
     let deploy_cmd_args = calculate_deploy_cmd_args(
@@ -198,17 +197,8 @@ fn deploy_contract(
         &contract_compiled_binary,
     );
 
-    let program_id_output = cmd!(sh, "solana program deploy {deploy_cmd_args...}").read()?;
-
-    parse_program_id(&program_id_output)
-}
-
-fn parse_program_id(output: &str) -> eyre::Result<Pubkey> {
-    let parts: Vec<&str> = output.split(':').collect();
-    let id_part: &&str = parts.get(1).ok_or(eyre::eyre!(
-        "Cannot parse programId from parts. Expected second index not found."
-    ))?;
-    Ok(Pubkey::from_str(id_part.trim())?)
+    cmd!(sh, "solana program deploy {deploy_cmd_args...}").read()?;
+    Ok(())
 }
 
 #[tracing::instrument(skip_all, ret)]
@@ -278,45 +268,7 @@ pub(crate) mod defaults {
 #[cfg(test)]
 mod tests {
 
-    use eyre::Ok;
-
     use super::*;
-
-    #[test]
-    fn parse_program_id_from_deploy_output() {
-        let expected_output =
-            Pubkey::from_str("4gG8FWzYihgixVfEdgGkMSdRTN9q8cGyDbkVwR72ir1g").unwrap();
-        let cases = vec![
-            (
-                "ProgramId: 4gG8FWzYihgixVfEdgGkMSdRTN9q8cGyDbkVwR72ir1g",
-                expected_output,
-            ),
-            (
-                "ProgramId:4gG8FWzYihgixVfEdgGkMSdRTN9q8cGyDbkVwR72ir1g",
-                expected_output,
-            ),
-            (
-                "ProgramId: 4gG8FWzYihgixVfEdgGkMSdRTN9q8cGyDbkVwR72ir1g    ",
-                expected_output,
-            ),
-            (
-                "PROGRAMID: 4gG8FWzYihgixVfEdgGkMSdRTN9q8cGyDbkVwR72ir1g",
-                expected_output,
-            ),
-        ];
-
-        cases
-            .into_iter()
-            .try_for_each(|(input, expected)| {
-                let pubkey = parse_program_id(input)?;
-                assert_eq!(
-                    pubkey, expected,
-                    "We expected input {input} to be parsed to {expected}"
-                );
-                Ok(())
-            })
-            .unwrap();
-    }
 
     #[test]
     fn calc_deploy_cmd_when_no_params_it_takes_default_solana_cli_config() {
