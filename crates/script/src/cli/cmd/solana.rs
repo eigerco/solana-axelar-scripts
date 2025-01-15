@@ -120,8 +120,10 @@ pub(crate) async fn init_gmp_gateway(
             &solana_deployment_root.solana_configuration.domain_separator,
         )?;
     let ini_tracker_pda = axelar_solana_gateway::get_verifier_set_tracker_pda(verifier_set_hash);
+    let upgrade_auth = payer_kp.pubkey();
     let initialize_config = axelar_solana_gateway::instructions::initialize_config(
         payer_kp.pubkey(),
+        upgrade_auth,
         solana_deployment_root.solana_configuration.domain_separator,
         vec![(verifier_set_hash, ini_tracker_pda.0)],
         minimum_rotation_delay,
