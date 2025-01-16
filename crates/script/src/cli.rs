@@ -209,6 +209,11 @@ pub(crate) enum SolanaInitSubcommand {
         minimum_rotation_delay: RotationDelaySecs,
     },
     AxelarSolanaMemoProgram {},
+    AxelarSolanaGasService {
+        // must be base58 pubkey
+        authority: String,
+        salt: String,
+    },
 }
 
 impl Cli {
@@ -483,6 +488,9 @@ async fn handle_solana(
             }
             SolanaInitSubcommand::AxelarSolanaMemoProgram {} => {
                 cmd::solana::init_memo_program(solana_deployment_root)?;
+            }
+            SolanaInitSubcommand::AxelarSolanaGasService { authority, salt } => {
+                cmd::solana::init_gas_service(solana_deployment_root, authority, salt)?;
             }
         },
     };

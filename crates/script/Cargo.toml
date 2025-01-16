@@ -24,6 +24,7 @@ axelar-executable.workspace = true
 axelar-solana-encoding.workspace = true
 axelar-solana-memo-program.workspace = true
 axelar-solana-gateway.workspace = true
+axelar-solana-gas-service.workspace = true
 evm-contracts-test-suite.workspace = true
 
 # Amplifier crates
