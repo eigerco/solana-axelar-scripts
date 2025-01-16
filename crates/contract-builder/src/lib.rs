@@ -96,6 +96,7 @@ pub mod solana {
             "programs/axelar-solana-multicall/Cargo.toml",
             "programs/axelar-solana-its/Cargo.toml",
             "programs/axelar-solana-governance/Cargo.toml",
+            "programs/axelar-solana-gas-service/Cargo.toml",
         ];
         for contract in contracts {
             cmd!(sh, "cargo build-sbf --manifest-path {contract}").run()?;
