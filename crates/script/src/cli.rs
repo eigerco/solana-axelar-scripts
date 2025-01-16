@@ -217,6 +217,27 @@ pub(crate) enum SolanaInitSubcommand {
     AxelarSolanaIts {
         operator: String,
     },
+    AxelarSolanaGovernance {
+        /// The name keccak hash of the governance chain of the remote GMP contract. This
+        /// param is used for validating the incoming GMP governance message.
+        #[arg(short, long)]
+        chain_hash: String,
+        /// The address keccak hash of the remote GMP governance contract. This param
+        /// is used for validating the incoming GMP governance message.
+        #[arg(short, long)]
+        address_hash: String,
+        /// This is the minimum time in seconds from `now()` a proposal can
+        /// be executed. If the incoming GMP proposal does not have an ETA
+        /// superior to `unix_timestamp` + `this field`, such ETA will be
+        /// will be set as new ETA.
+        #[arg(short, long)]
+        minimum_proposal_eta_delay: u32,
+        /// The base58 string representation of the pub key of the operator. This address is able
+        /// to execute proposals that were previously scheduled by the Axelar governance
+        /// infrastructure via GMP flow regardless of the proposal ETA.
+        #[arg(short, long)]
+        operator: String,
+    },
 }
 
 impl Cli {
@@ -497,6 +518,20 @@ async fn handle_solana(
             }
             SolanaInitSubcommand::AxelarSolanaIts { operator } => {
                 cmd::solana::init_its(solana_deployment_root, operator)?;
+            }
+            SolanaInitSubcommand::AxelarSolanaGovernance {
+                chain_hash,
+                address_hash,
+                minimum_proposal_eta_delay,
+                operator,
+            } => {
+                cmd::solana::init_governance(
+                    solana_deployment_root,
+                    chain_hash,
+                    address_hash,
+                    minimum_proposal_eta_delay,
+                    operator,
+                )?;
             }
         },
     };
