@@ -269,7 +269,6 @@ pub(crate) fn init_governance(
     }
 
     let config = axelar_solana_governance::state::GovernanceConfig::new(
-        2, // todo remove this once last gov pr fix is merged
         keccak::Hash::from_str(chain_hash.as_str())?.to_bytes(),
         keccak::Hash::from_str(address_hash.as_str())?.to_bytes(),
         minimum_proposal_eta_delay,
