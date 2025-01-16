@@ -8,7 +8,7 @@ use std::time::Duration;
 
 use axelar_solana_encoding::types::execute_data::{ExecuteData, MerkleisedPayload};
 use axelar_solana_gateway::get_gateway_root_config_pda;
-use axelar_solana_gateway::state::{BytemuckedPda, GatewayConfig};
+use axelar_solana_gateway::state::GatewayConfig;
 use ethers::types::{Address as EvmAddress, H160};
 use evm_contracts_test_suite::EvmSigner;
 use eyre::OptionExt;
@@ -41,7 +41,7 @@ pub(crate) async fn evm_to_solana(
         .contracts
         .gateway
         .networks
-        .get(source_chain.id.as_str())
+        .get(source_chain.axelar_id.as_str())
         .and_then(|x| cosmrs::AccountId::from_str(x.address.as_str()).ok())
         .unwrap();
     let source_axelar_voting_verifier = axelar_deployments
@@ -49,7 +49,7 @@ pub(crate) async fn evm_to_solana(
         .contracts
         .voting_verifier
         .networks
-        .get(source_chain.id.as_str())
+        .get(source_chain.axelar_id.as_str())
         .and_then(|x| cosmrs::AccountId::from_str(x.address.as_str()).ok())
         .unwrap();
     let destination_multisig_prover = cosmrs::AccountId::from_str(
@@ -67,86 +67,87 @@ pub(crate) async fn evm_to_solana(
 
     let root_pda = get_gateway_root_config_pda().0;
     let root_pda = solana_rpc_client.get_account(&root_pda).unwrap();
-    let account_data = GatewayConfig::read(&root_pda.data).unwrap();
-    tracing::info!(?account_data, "solana gateway root pda config");
+    // let account_data = GatewayConfig::read(&root_pda.data).unwrap();
+    // tracing::info!(?account_data, "solana gateway root pda config");
 
-    let tx = send_memo_to_solana(
-        source_evm_signer,
-        memo_to_send.as_str(),
-        destination_chain_name,
-        our_evm_deployment_tracker,
-    )
-    .await?;
-    tracing::info!(
-        source = source_chain.id,
-        dest = destination_chain_name,
-        memo = memo_to_send,
-        "memo sent"
-    );
-    tracing::info!("sleeping to allow the tx to settle");
-    if only_evm_calls {
-        return Ok(());
-    }
-    tokio::time::sleep(Duration::from_secs(30)).await;
-    let (payload, message) = evm_interaction::create_axelar_message_from_evm_log(&tx, source_chain);
-    let execute_data = cosmwasm_interactions::wire_cosmwasm_contracts(
-        source_chain.id.as_str(),
-        destination_chain_name,
-        memo_to_send,
-        &message,
-        cosmwasm_signer,
-        &source_axelar_gateway,
-        &source_axelar_voting_verifier,
-        &destination_multisig_prover,
-        &solana_deployments.axelar_configuration,
-    )
-    .await?;
-    let gateway_root_pda = get_gateway_root_config_pda().0;
-    let execute_data = borsh::from_slice::<ExecuteData>(&execute_data)?;
+    // let tx = send_memo_to_solana(
+    //     source_evm_signer,
+    //     memo_to_send.as_str(),
+    //     destination_chain_name,
+    //     our_evm_deployment_tracker,
+    // )
+    // .await?;
+    // tracing::info!(
+    //     source = source_chain.id,
+    //     dest = destination_chain_name,
+    //     memo = memo_to_send,
+    //     "memo sent"
+    // );
+    // tracing::info!("sleeping to allow the tx to settle");
+    // if only_evm_calls {
+    //     return Ok(());
+    // }
+    // tokio::time::sleep(Duration::from_secs(30)).await;
+    // let (payload, message) = evm_interaction::create_axelar_message_from_evm_log(&tx,
+    // source_chain); let execute_data = cosmwasm_interactions::wire_cosmwasm_contracts(
+    //     source_chain.id.as_str(),
+    //     destination_chain_name,
+    //     memo_to_send,
+    //     &message,
+    //     cosmwasm_signer,
+    //     &source_axelar_gateway,
+    //     &source_axelar_voting_verifier,
+    //     &destination_multisig_prover,
+    //     &solana_deployments.axelar_configuration,
+    // )
+    // .await?;
+    // let gateway_root_pda = get_gateway_root_config_pda().0;
+    // let execute_data = borsh::from_slice::<ExecuteData>(&execute_data)?;
 
-    // init payload approval session
-    let (session_pda, _bump) = solana_interactions::solana_start_verification_session(
-        &solana_keypair,
-        gateway_root_pda,
-        execute_data.payload_merkle_root,
-        &solana_rpc_client,
-    )?;
+    // // init payload approval session
+    // let (session_pda, _bump) = solana_interactions::solana_start_verification_session(
+    //     &solana_keypair,
+    //     gateway_root_pda,
+    //     execute_data.payload_merkle_root,
+    //     &solana_rpc_client,
+    // )?;
 
-    // verify each signature
-    for sig in execute_data.signing_verifier_set_leaves {
-        solana_interactions::solana_verify_signature(
-            &solana_keypair,
-            gateway_root_pda,
-            session_pda,
-            execute_data.payload_merkle_root,
-            sig,
-            &solana_rpc_client,
-        )?;
-    }
+    // // verify each signature
+    // for sig in execute_data.signing_verifier_set_leaves {
+    //     solana_interactions::solana_verify_signature(
+    //         &solana_keypair,
+    //         gateway_root_pda,
+    //         session_pda,
+    //         execute_data.payload_merkle_root,
+    //         sig,
+    //         &solana_rpc_client,
+    //     )?;
+    // }
 
-    // send the actual message
-    match execute_data.payload_items {
-        MerkleisedPayload::VerifierSetRotation { .. } => todo!(),
-        MerkleisedPayload::NewMessages { messages } => {
-            for message in messages {
-                let message_pda = solana_interactions::solana_approve_message(
-                    &solana_keypair,
-                    gateway_root_pda,
-                    session_pda,
-                    execute_data.payload_merkle_root,
-                    message.clone(),
-                    &solana_rpc_client,
-                )?;
-                solana_interactions::solana_call_executable(
-                    message.leaf.message,
-                    &payload,
-                    message_pda,
-                    &solana_rpc_client,
-                    &solana_keypair,
-                )?;
-            }
-        }
-    };
+    // // send the actual message
+    // match execute_data.payload_items {
+    //     MerkleisedPayload::VerifierSetRotation { .. } => todo!(),
+    //     MerkleisedPayload::NewMessages { messages } => {
+    //         for message in messages {
+    //             let message_pda = solana_interactions::solana_approve_message(
+    //                 &solana_keypair,
+    //                 gateway_root_pda,
+    //                 session_pda,
+    //                 execute_data.payload_merkle_root,
+    //                 message.clone(),
+    //                 &solana_rpc_client,
+    //             )?;
+    //             solana_interactions::solana_call_executable(
+    //                 message.leaf.message,
+    //                 &payload,
+    //                 message_pda,
+    //                 &solana_rpc_client,
+    //                 &solana_keypair,
+    //             )?;
+    //         }
+    //     }
+    // };
+    todo!();
     Ok(())
 }
 
@@ -191,7 +192,7 @@ pub(crate) async fn solana_to_evm(
         .contracts
         .multisig_prover
         .networks
-        .get(destination_chain.id.as_str())
+        .get(destination_chain.axelar_id.as_str())
         .and_then(|x| cosmrs::AccountId::from_str(x.address.as_str()).ok())
         .unwrap();
 
@@ -210,7 +211,7 @@ pub(crate) async fn solana_to_evm(
     }
     let execute_data = cosmwasm_interactions::wire_cosmwasm_contracts(
         source_chain_name,
-        &destination_chain.id,
+        &destination_chain.axelar_id,
         memo_to_send,
         &message,
         cosmwasm_signer,
@@ -258,7 +259,7 @@ pub(crate) async fn evm_to_evm(
         .contracts
         .gateway
         .networks
-        .get(source_chain.id.as_str())
+        .get(source_chain.axelar_id.as_str())
         .and_then(|x| cosmrs::AccountId::from_str(x.address.as_str()).ok())
         .unwrap();
     let source_axelar_voting_verifier = axelar_deployments
@@ -266,7 +267,7 @@ pub(crate) async fn evm_to_evm(
         .contracts
         .voting_verifier
         .networks
-        .get(source_chain.id.as_str())
+        .get(source_chain.axelar_id.as_str())
         .and_then(|x| cosmrs::AccountId::from_str(x.address.as_str()).ok())
         .unwrap();
     let destination_multisig_prover = axelar_deployments
@@ -274,7 +275,7 @@ pub(crate) async fn evm_to_evm(
         .contracts
         .multisig_prover
         .networks
-        .get(destination_chain.id.as_str())
+        .get(destination_chain.axelar_id.as_str())
         .and_then(|x| cosmrs::AccountId::from_str(x.address.as_str()).ok())
         .unwrap();
 
@@ -293,8 +294,8 @@ pub(crate) async fn evm_to_evm(
     )
     .await?;
     tracing::info!(
-        source = source_chain.id,
-        dest = destination_chain.id,
+        source = source_chain.axelar_id,
+        dest = destination_chain.axelar_id,
         memo = memo_to_send,
         "memo sent"
     );
@@ -303,8 +304,8 @@ pub(crate) async fn evm_to_evm(
     let (payload, message) = evm_interaction::create_axelar_message_from_evm_log(&tx, source_chain);
 
     let execute_data = cosmwasm_interactions::wire_cosmwasm_contracts(
-        source_chain.id.as_str(),
-        &destination_chain.id,
+        source_chain.axelar_id.as_str(),
+        &destination_chain.axelar_id,
         memo_to_send,
         &message,
         cosmwasm_signer,

@@ -31,7 +31,7 @@ pub(crate) fn send_memo_from_solana(
                 gateway_root_pda,
                 &solana_keypair.pubkey(),
                 memo.to_string(),
-                destination_chain.id.clone(),
+                destination_chain.axelar_id.clone(),
                 ethers::utils::to_checksum(&destination_memo_contract, None),
                 &axelar_solana_gateway::ID,
             )?,
@@ -104,20 +104,21 @@ pub(crate) fn solana_call_executable(
     solana_rpc_client: &solana_client::rpc_client::RpcClient,
     solana_keypair: &Keypair,
 ) -> eyre::Result<()> {
-    let ix = axelar_executable::construct_axelar_executable_ix(
-        message,
-        payload,
-        gateway_incoming_message_pda,
-    )?;
+    // let ix = axelar_executable::construct_axelar_executable_ix(
+    //     &message,
+    //     payload,
+    //     gateway_incoming_message_pda,
+    // )?;
 
-    send_solana_tx(
-        solana_rpc_client,
-        &[
-            ComputeBudgetInstruction::set_compute_unit_limit(1_399_850_u32),
-            ix,
-        ],
-        solana_keypair,
-    )?;
+    // send_solana_tx(
+    //     solana_rpc_client,
+    //     &[
+    //         ComputeBudgetInstruction::set_compute_unit_limit(1_399_850_u32),
+    //         ix,
+    //     ],
+    //     solana_keypair,
+    // )?;
+    todo!();
     Ok(())
 }
 

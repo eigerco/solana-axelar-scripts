@@ -30,10 +30,10 @@ type = "MultisigSigner"
 type = "SolanaMsgVerifier"
 chain_name = "solana-devnet"
 rpc_url = "https://api.devnet.solana.com"
-cosmwasm_contract = "axelar1ax3e9c5hd4n2438yy440y3g0gh5m7y70q7gqwfz02v0knzpa483qwta2j6"
+cosmwasm_contract = "axelar1e0v4aywud0zte7msth6f8tn5mueekn5qwruds50nmg02z5a9adlq0hyanm"
 
 [[handlers]]
 type = "SolanaVerifierSetVerifier"
 chain_name = "solana-devnet"
 rpc_url = "https://api.devnet.solana.com"
-cosmwasm_contract = "axelar1ax3e9c5hd4n2438yy440y3g0gh5m7y70q7gqwfz02v0knzpa483qwta2j6"
+cosmwasm_contract = "axelar1e0v4aywud0zte7msth6f8tn5mueekn5qwruds50nmg02z5a9adlq0hyanm"

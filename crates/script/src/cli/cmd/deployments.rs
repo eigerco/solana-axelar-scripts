@@ -221,10 +221,10 @@ impl EvmDeployments {
         axelar_evm_chain: &super::axelar_deployments::EvmChain,
     ) -> &mut CustomEvmChainDeployments {
         self.chains
-            .entry(axelar_evm_chain.id.clone())
+            .entry(axelar_evm_chain.axelar_id.clone())
             .or_insert_with(|| CustomEvmChainDeployments {
                 name: axelar_evm_chain.name.clone(),
-                id: axelar_evm_chain.id.clone(),
+                id: axelar_evm_chain.axelar_id.clone(),
                 axelar_id: axelar_evm_chain.axelar_id.clone(),
                 chain_id: axelar_evm_chain.chain_id,
                 rpc: axelar_evm_chain.rpc.clone(),

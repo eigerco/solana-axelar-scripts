@@ -420,7 +420,7 @@ async fn maybe_deploy_evm_memo_contract(
         return Ok(ethers::types::H160::from_str(addr)?);
     }
 
-    tracing::info!(chain = ?chain.id, "memo contract not present, deploying");
+    tracing::info!(chain = ?chain.axelar_id, "memo contract not present, deploying");
     let res = cmd::evm::deploy_axelar_memo(
         evm_signer.clone(),
         chain

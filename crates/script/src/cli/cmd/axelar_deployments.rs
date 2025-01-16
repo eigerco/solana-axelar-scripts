@@ -8,7 +8,6 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 pub(crate) struct EvmChain {
     pub(crate) name: String,
-    pub(crate) id: String,
     pub(crate) axelar_id: String,
     pub(crate) chain_id: u64,
     pub(crate) rpc: String,
@@ -39,13 +38,6 @@ pub(crate) struct AxelarGateway {
     pub(crate) implementation: String,
     pub(crate) implementation_codehash: String,
     pub(crate) deployment_method: String,
-    pub(crate) operator: String,
-    pub(crate) previous_signers_retention: u64,
-    pub(crate) domain_separator: String,
-    pub(crate) minimum_rotation_delay: u64,
-    pub(crate) salt: String,
-    pub(crate) gas_options: GasOptions,
-    pub(crate) proxy_deployment_args: Vec<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -81,14 +73,12 @@ pub(crate) struct Explorer {
     #[serde(alias = "explorer")]
     pub(crate) name: String,
     pub(crate) url: String,
-    pub(crate) api: String,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct AxelarChain {
     pub(crate) contracts: AxelarContracts,
-    pub(crate) id: String,
     pub(crate) axelar_id: String,
     pub(crate) chain_id: String,
     pub(crate) rpc: String,
