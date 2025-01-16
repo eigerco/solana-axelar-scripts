@@ -61,14 +61,14 @@ unused_must_use = { level = "deny", priority = -1 }
 [workspace.dependencies]
 contract-builder = { path = "crates/contract-builder" }
 
-axelar-executable = { git = "https://github.com/eigerco/solana-axelar.git", rev = "61b074d46004be34f9" }
-gateway-event-stack = { git = "https://github.com/eigerco/solana-axelar.git", rev = "61b074d46004be34f9" }
-axelar-solana-encoding = { git = "https://github.com/eigerco/solana-axelar.git", rev = "61b074d46004be34f9" }
-axelar-solana-memo-program = { git = "https://github.com/eigerco/solana-axelar.git", rev = "61b074d46004be34f9" }
-axelar-solana-gateway = { git = "https://github.com/eigerco/solana-axelar.git", rev = "61b074d46004be34f9" }
-axelar-solana-gas-service = { git = "https://github.com/eigerco/solana-axelar.git", rev = "61b074d46004be34f9" }
-axelar-solana-gateway-test-fixtures = { git = "https://github.com/eigerco/solana-axelar.git", rev = "61b074d46004be34f9" }
-evm-contracts-test-suite = { git = "https://github.com/eigerco/solana-axelar.git", rev = "61b074d46004be34f9" }
+axelar-executable = { git = "https://github.com/eigerco/solana-axelar.git", rev = "651e7237" }
+gateway-event-stack = { git = "https://github.com/eigerco/solana-axelar.git", rev = "651e7237" }
+axelar-solana-encoding = { git = "https://github.com/eigerco/solana-axelar.git", rev = "651e7237" }
+axelar-solana-memo-program = { git = "https://github.com/eigerco/solana-axelar.git", rev = "651e7237" }
+axelar-solana-gateway = { git = "https://github.com/eigerco/solana-axelar.git", rev = "651e7237" }
+axelar-solana-gas-service = { git = "https://github.com/eigerco/solana-axelar.git", rev = "651e7237" }
+axelar-solana-gateway-test-fixtures = { git = "https://github.com/eigerco/solana-axelar.git", rev = "651e7237" }
+evm-contracts-test-suite = { git = "https://github.com/eigerco/solana-axelar.git", rev = "651e7237" }
 
 solana-cli-config = "2.0.1"
 solana-client = "=2.0.16"
