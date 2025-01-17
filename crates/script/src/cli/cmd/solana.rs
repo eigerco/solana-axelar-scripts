@@ -20,7 +20,7 @@ use xshell::{cmd, Shell};
 use super::cosmwasm::cosmos_client::signer::SigningClient;
 use super::deployments::{SolanaDeploymentRoot, SolanaMemoProgram};
 use super::testnet::solana_interactions::send_solana_tx;
-use crate::cli::cmd::deployments::{GasService, SolanaGatewayDeployment};
+use crate::cli::cmd::deployments::{GasService, SolanaGatewayDeployment, SolanaIts};
 use crate::cli::cmd::testnet::multisig_prover_api;
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, clap::ValueEnum)]
@@ -28,6 +28,7 @@ pub(crate) enum SolanaContract {
     AxelarSolanaGateway,
     AxelarSolanaMemo,
     AxelarSolanaGasService,
+    AxelarSolanaIts,
 }
 
 impl SolanaContract {
@@ -39,6 +40,7 @@ impl SolanaContract {
             SolanaContract::AxelarSolanaGateway => PathBuf::from("axelar_solana_gateway.so"),
             SolanaContract::AxelarSolanaMemo => PathBuf::from("axelar_solana_memo_program.so"),
             SolanaContract::AxelarSolanaGasService => PathBuf::from("axelar_solana_gas_service.so"),
+            SolanaContract::AxelarSolanaIts => PathBuf::from("axelar_solana_its.so"),
         }
     }
 }
@@ -49,6 +51,7 @@ impl Display for SolanaContract {
             SolanaContract::AxelarSolanaGateway => write!(f, "axelar-solana-gateway"),
             SolanaContract::AxelarSolanaMemo => write!(f, "axelar-solana-memo-program"),
             SolanaContract::AxelarSolanaGasService => write!(f, "axelar-solana-gas-service"),
+            SolanaContract::AxelarSolanaIts => write!(f, "axelar-solana-its"),
         }
     }
 }
@@ -195,6 +198,41 @@ pub(crate) fn init_gas_service(
         authority,
         salt,
         salt_hash,
+    });
+
+    Ok(())
+}
+
+#[tracing::instrument(skip_all)]
+pub(crate) fn init_its(
+    solana_deployment_root: &mut SolanaDeploymentRoot,
+    operator: String,
+) -> eyre::Result<()> {
+    let payer_kp = defaults::payer_kp()?;
+    let rpc_client = RpcClient::new(defaults::rpc_url()?.to_string());
+
+    let gateway_root_pda = get_gateway_root_config_pda().0;
+    let its_root_pda = axelar_solana_its::find_its_root_pda(&gateway_root_pda);
+    let operator = Pubkey::from_str(operator.as_str())?;
+    let account = rpc_client.get_account(&its_root_pda.0);
+    if account.is_ok() {
+        solana_deployment_root.solana_its = Some(SolanaIts {
+            solana_gateway_root_config_pda: gateway_root_pda,
+            program_id: axelar_solana_its::id(),
+            config_pda: its_root_pda.0,
+            operator,
+        });
+        tracing::warn!("counter PDA alradey initialized");
+        return Ok(());
+    }
+    let ix =
+        axelar_solana_its::instructions::initialize(payer_kp.pubkey(), gateway_root_pda, operator)?;
+    send_solana_tx(&rpc_client, &[ix], &payer_kp)?;
+    solana_deployment_root.solana_its = Some(SolanaIts {
+        solana_gateway_root_config_pda: gateway_root_pda,
+        program_id: axelar_solana_its::id(),
+        config_pda: its_root_pda.0,
+        operator,
     });
 
     Ok(())

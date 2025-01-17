@@ -68,6 +68,7 @@ axelar-solana-memo-program = { git = "https://github.com/eigerco/solana-axelar.g
 axelar-solana-gateway = { git = "https://github.com/eigerco/solana-axelar.git", rev = "651e7237" }
 axelar-solana-gas-service = { git = "https://github.com/eigerco/solana-axelar.git", rev = "651e7237" }
 axelar-solana-gateway-test-fixtures = { git = "https://github.com/eigerco/solana-axelar.git", rev = "651e7237" }
+axelar-solana-its = { git = "https://github.com/eigerco/solana-axelar.git", rev = "651e7237" }
 evm-contracts-test-suite = { git = "https://github.com/eigerco/solana-axelar.git", rev = "651e7237" }
 
 solana-cli-config = "2.0.1"

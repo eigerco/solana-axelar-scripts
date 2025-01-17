@@ -21,6 +21,7 @@ pub(crate) struct SolanaDeploymentRoot {
     pub(crate) solana_gateway: Option<SolanaGatewayDeployment>,
     pub(crate) solana_memo_program: Option<SolanaMemoProgram>,
     pub(crate) gas_service: Option<GasService>,
+    pub(crate) solana_its: Option<SolanaIts>,
     pub(crate) evm_deployments: EvmDeployments,
 }
 
@@ -60,6 +61,7 @@ impl SolanaDeploymentRoot {
                     solana_memo_program: None,
                     evm_deployments: EvmDeployments::default(),
                     gas_service: None,
+                    solana_its: None,
                 }
             });
         solana_root.save()?;
@@ -219,6 +221,14 @@ pub(crate) struct GasService {
     pub(crate) authority: Pubkey,
     pub(crate) salt: String,
     pub(crate) salt_hash: [u8; 32],
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub(crate) struct SolanaIts {
+    pub(crate) solana_gateway_root_config_pda: Pubkey,
+    pub(crate) program_id: Pubkey,
+    pub(crate) config_pda: Pubkey,
+    pub(crate) operator: Pubkey,
 }
 
 #[derive(Debug, Default, Clone, serde::Serialize, serde::Deserialize)]
