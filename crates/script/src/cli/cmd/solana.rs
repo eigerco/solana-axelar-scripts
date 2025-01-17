@@ -43,7 +43,7 @@ impl SolanaContract {
             SolanaContract::AxelarSolanaMemo => PathBuf::from("axelar_solana_memo_program.so"),
             SolanaContract::AxelarSolanaGasService => PathBuf::from("axelar_solana_gas_service.so"),
             SolanaContract::AxelarSolanaIts => PathBuf::from("axelar_solana_its.so"),
-            SolanaContract::AxelarSolanaGovernance => PathBuf::from("axelar-solana-governance.so"),
+            SolanaContract::AxelarSolanaGovernance => PathBuf::from("axelar_solana_governance.so"),
         }
     }
 }
