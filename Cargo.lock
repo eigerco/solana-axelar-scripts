@@ -7461,6 +7461,7 @@ dependencies = [
  "axelar-solana-encoding",
  "axelar-solana-gas-service",
  "axelar-solana-gateway",
+ "axelar-solana-its",
  "axelar-solana-memo-program",
  "axelar-wasm-std",
  "base64 0.21.7",

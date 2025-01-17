@@ -214,6 +214,9 @@ pub(crate) enum SolanaInitSubcommand {
         authority: String,
         salt: String,
     },
+    AxelarSolanaIts {
+        operator: String,
+    },
 }
 
 impl Cli {
@@ -491,6 +494,9 @@ async fn handle_solana(
             }
             SolanaInitSubcommand::AxelarSolanaGasService { authority, salt } => {
                 cmd::solana::init_gas_service(solana_deployment_root, authority, salt)?;
+            }
+            SolanaInitSubcommand::AxelarSolanaIts { operator } => {
+                cmd::solana::init_its(solana_deployment_root, operator)?;
             }
         },
     };
