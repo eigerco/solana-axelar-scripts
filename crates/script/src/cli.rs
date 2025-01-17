@@ -218,12 +218,12 @@ pub(crate) enum SolanaInitSubcommand {
         operator: String,
     },
     AxelarSolanaGovernance {
-        /// The name keccak hash of the governance chain of the remote GMP contract. This
-        /// param is used for validating the incoming GMP governance message.
+        /// The name keccak hash base58 encoded of the governance chain of the remote GMP contract.
+        /// This param is used for validating the incoming GMP governance message.
         #[arg(short, long)]
         chain_hash: String,
-        /// The address keccak hash of the remote GMP governance contract. This param
-        /// is used for validating the incoming GMP governance message.
+        /// The address keccak hash base58 encoded of the remote GMP governance contract. This
+        /// param is used for validating the incoming GMP governance message.
         #[arg(short, long)]
         address_hash: String,
         /// This is the minimum time in seconds from `now()` a proposal can
