@@ -11,6 +11,7 @@ use axelar_solana_gateway::state::config::RotationDelaySecs;
 use contract_builder::solana::contracts_artifact_dir;
 use eyre::OptionExt;
 use solana_client::rpc_client::RpcClient;
+use solana_sdk::keccak;
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::signature::Signer;
 use tracing::info;
@@ -20,7 +21,7 @@ use xshell::{cmd, Shell};
 use super::cosmwasm::cosmos_client::signer::SigningClient;
 use super::deployments::{SolanaDeploymentRoot, SolanaMemoProgram};
 use super::testnet::solana_interactions::send_solana_tx;
-use crate::cli::cmd::deployments::{GasService, SolanaGatewayDeployment, SolanaIts};
+use crate::cli::cmd::deployments::{GasService, Governance, SolanaGatewayDeployment, SolanaIts};
 use crate::cli::cmd::testnet::multisig_prover_api;
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, clap::ValueEnum)]
@@ -29,6 +30,7 @@ pub(crate) enum SolanaContract {
     AxelarSolanaMemo,
     AxelarSolanaGasService,
     AxelarSolanaIts,
+    AxelarSolanaGovernance
 }
 
 impl SolanaContract {
@@ -41,6 +43,7 @@ impl SolanaContract {
             SolanaContract::AxelarSolanaMemo => PathBuf::from("axelar_solana_memo_program.so"),
             SolanaContract::AxelarSolanaGasService => PathBuf::from("axelar_solana_gas_service.so"),
             SolanaContract::AxelarSolanaIts => PathBuf::from("axelar_solana_its.so"),
+            SolanaContract::AxelarSolanaGovernance => PathBuf::from("axelar_solana_governance.so"),
         }
     }
 }
@@ -52,6 +55,7 @@ impl Display for SolanaContract {
             SolanaContract::AxelarSolanaMemo => write!(f, "axelar-solana-memo-program"),
             SolanaContract::AxelarSolanaGasService => write!(f, "axelar-solana-gas-service"),
             SolanaContract::AxelarSolanaIts => write!(f, "axelar-solana-its"),
+            SolanaContract::AxelarSolanaGovernance => write!(f, "axelar-solana-governance"),
         }
     }
 }
@@ -237,6 +241,58 @@ pub(crate) fn init_its(
 
     Ok(())
 }
+
+pub(crate) fn init_governance(
+    solana_deployment_root: &mut SolanaDeploymentRoot,
+    chain_hash: String,
+    address_hash: String,
+    minimum_proposal_eta_delay: u32,
+    operator: String,
+) -> eyre::Result<()> {
+    let config_pda = axelar_solana_governance::state::GovernanceConfig::pda();
+    let rpc_client: RpcClient = RpcClient::new(defaults::rpc_url()?.to_string());
+    let operator = Pubkey::from_str(operator.as_str())?;
+
+    let account = rpc_client.get_account(&config_pda.0);
+
+    if account.is_ok() {
+        solana_deployment_root.governance = Some(Governance {
+            config_pda: config_pda.0,
+            program_id: axelar_solana_governance::id(),
+            chain_hash,
+            address_hash,
+            minimum_proposal_eta_delay,
+            operator,
+        });
+        tracing::warn!("Config PDA already initialized");
+        return Ok(());
+    }
+
+    let config = axelar_solana_governance::state::GovernanceConfig::new(
+        keccak::Hash::from_str(chain_hash.as_str())?.to_bytes(),
+        keccak::Hash::from_str(address_hash.as_str())?.to_bytes(),
+        minimum_proposal_eta_delay,
+        operator.to_bytes(),
+    );
+
+    let payer_kp = defaults::payer_kp()?;
+    let ix = axelar_solana_governance::instructions::builder::IxBuilder::new()
+        .initialize_config(&payer_kp.pubkey(), &config_pda.0, config)
+        .build();
+
+    send_solana_tx(&rpc_client, &[ix], &payer_kp)?;
+    solana_deployment_root.governance = Some(Governance {
+        config_pda: config_pda.0,
+        program_id: axelar_solana_governance::id(),
+        chain_hash,
+        address_hash,
+        minimum_proposal_eta_delay,
+        operator,
+    });
+
+    Ok(())
+}
+
 
 #[tracing::instrument(skip_all)]
 pub(crate) fn init_memo_program(
