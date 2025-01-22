@@ -78,30 +78,20 @@ pub(crate) enum TestnetFlowDirection {
     EvmToSolana {
         #[arg(long)]
         memo_to_send: String,
-        // -- axelar configs --
-        #[arg(long)]
-        axelar_private_key_hex: String,
         // -- evm configs --
         #[arg(long)]
         source_evm_private_key_hex: String,
         #[arg(long)]
         source_evm_chain: String,
-        #[arg(long)]
-        only_evm_calls: bool,
     },
     SolanaToEvm {
         #[arg(long)]
         memo_to_send: String,
-        // -- axelar configs --
-        #[arg(long)]
-        axelar_private_key_hex: String,
         // -- evm configs --
         #[arg(long)]
         destination_evm_private_key_hex: String,
         #[arg(long)]
         destination_evm_chain: String,
-        #[arg(long)]
-        only_solana_calls: bool,
     },
 }
 
@@ -325,19 +315,13 @@ async fn handle_testnet(
             .await?;
         }
         TestnetFlowDirection::EvmToSolana {
-            axelar_private_key_hex,
             source_evm_private_key_hex,
             source_evm_chain,
             memo_to_send,
-            only_evm_calls,
         } => {
             let source_chain = axelar_deployment_root.get_evm_chain(source_evm_chain.as_str())?;
             let source_evm_signer =
                 create_evm_signer(&source_chain, source_evm_private_key_hex).await;
-            let cosmwasm_signer = create_axelar_cosmsos_signer(
-                axelar_private_key_hex,
-                &solana_deployment_root.axelar_configuration,
-            )?;
             let source_evm_deployment_tracker = solana_deployment_root
                 .evm_deployments
                 .get_or_insert_mut(&source_chain);
@@ -348,38 +332,23 @@ async fn handle_testnet(
                 source_evm_deployment_tracker,
             )
             .await?;
-            let solana_rpc_client = solana_client::rpc_client::RpcClient::new(
-                cmd::solana::defaults::rpc_url()?.to_string(),
-            );
-            let solana_keypair = cmd::solana::defaults::payer_kp()?;
             cmd::testnet::evm_to_solana(
                 &source_chain,
                 source_evm_signer,
-                cosmwasm_signer,
-                solana_rpc_client,
-                solana_keypair,
                 memo_to_send,
-                axelar_deployment_root,
                 solana_deployment_root,
-                only_evm_calls,
             )
             .await?;
         }
         TestnetFlowDirection::SolanaToEvm {
             memo_to_send,
-            axelar_private_key_hex,
             destination_evm_private_key_hex,
             destination_evm_chain,
-            only_solana_calls,
         } => {
             let destination_chain =
                 axelar_deployment_root.get_evm_chain(destination_evm_chain.as_str())?;
             let destination_evm_signer =
                 create_evm_signer(&destination_chain, destination_evm_private_key_hex).await;
-            let cosmwasm_signer = create_axelar_cosmsos_signer(
-                axelar_private_key_hex,
-                &solana_deployment_root.axelar_configuration,
-            )?;
             let destination_evm_deployment_tracker = solana_deployment_root
                 .evm_deployments
                 .get_or_insert_mut(&destination_chain);
@@ -396,15 +365,11 @@ async fn handle_testnet(
             let solana_keypair = cmd::solana::defaults::payer_kp()?;
             cmd::testnet::solana_to_evm(
                 &destination_chain,
-                destination_evm_signer,
-                cosmwasm_signer,
                 destination_memo_contract,
                 solana_rpc_client,
                 solana_keypair,
                 memo_to_send,
-                axelar_deployment_root,
                 solana_deployment_root,
-                only_solana_calls,
             )
             .await?;
         }
