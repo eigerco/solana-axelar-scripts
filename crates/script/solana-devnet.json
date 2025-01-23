@@ -906,6 +906,33 @@
     ]
   },
   "evm_deployments": {
-    "chains": {}
+    "chains": {
+      "avalanche-fuji": {
+        "name": "Avalanche Fuji",
+        "id": "avalanche-fuji",
+        "axelar_id": "avalanche-fuji",
+        "chain_id": 43113,
+        "rpc": "https://avalanche-fuji-c-chain-rpc.publicnode.com",
+        "token_symbol": "AVAX",
+        "confirmations": 1,
+        "contracts": {
+          "AxelarGateway": {
+            "address": "0xF128c84c3326727c3e155168daAa4C0156B87AD1",
+            "deployer": "0xba76c6980428A0b10CFC5d8ccb61949677A61233",
+            "implementation": "0x3c19E701ed674350DE8cAEb0B85A388499246D2d",
+            "implementationCodehash": "0xdb3dd6f58bf1295e87d39ec97e90a9a7cab857458af46d31e40fbe0589af2317",
+            "deploymentMethod": "create3"
+          },
+          "InterchainGovernance": {
+            "address": "0xba76c6980428A0b10CFC5d8ccb61949677A61233"
+          }
+        },
+        "explorer": {
+          "name": "Snowtrace",
+          "url": "https://testnet.snowtrace.io"
+        },
+        "memo_program_address": "0x4797219fb29a8474e0c0ebe5649087608d2b7868"
+      }
+    }
   }
 }
