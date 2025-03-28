@@ -206,6 +206,8 @@ pub(crate) enum SolanaInitSubcommand {
     },
     AxelarSolanaIts {
         operator: String,
+        chain_name: String,
+        its_hub_address: String,
     },
     AxelarSolanaGovernance {
         /// The name keccak hash base58 encoded of the governance chain of the remote GMP contract.
@@ -481,8 +483,17 @@ async fn handle_solana(
             SolanaInitSubcommand::AxelarSolanaGasService { authority, salt } => {
                 cmd::solana::init_gas_service(solana_deployment_root, authority, salt)?;
             }
-            SolanaInitSubcommand::AxelarSolanaIts { operator } => {
-                cmd::solana::init_its(solana_deployment_root, operator)?;
+            SolanaInitSubcommand::AxelarSolanaIts {
+                operator,
+                chain_name,
+                its_hub_address,
+            } => {
+                cmd::solana::init_its(
+                    solana_deployment_root,
+                    operator,
+                    chain_name,
+                    its_hub_address,
+                )?;
             }
             SolanaInitSubcommand::AxelarSolanaGovernance {
                 chain_hash,
