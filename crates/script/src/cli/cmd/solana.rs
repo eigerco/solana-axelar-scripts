@@ -30,7 +30,7 @@ pub(crate) enum SolanaContract {
     AxelarSolanaMemo,
     AxelarSolanaGasService,
     AxelarSolanaIts,
-    AxelarSolanaGovernance
+    AxelarSolanaGovernance,
 }
 
 impl SolanaContract {
@@ -211,6 +211,8 @@ pub(crate) fn init_gas_service(
 pub(crate) fn init_its(
     solana_deployment_root: &mut SolanaDeploymentRoot,
     operator: String,
+    chain_name: String,
+    its_hub_address: String,
 ) -> eyre::Result<()> {
     let payer_kp = defaults::payer_kp()?;
     let rpc_client = RpcClient::new(defaults::rpc_url()?.to_string());
@@ -229,8 +231,13 @@ pub(crate) fn init_its(
         tracing::warn!("counter PDA alradey initialized");
         return Ok(());
     }
-    let ix =
-        axelar_solana_its::instructions::initialize(payer_kp.pubkey(), gateway_root_pda, operator)?;
+    let ix = axelar_solana_its::instruction::initialize(
+        payer_kp.pubkey(),
+        gateway_root_pda,
+        operator,
+        chain_name,
+        its_hub_address,
+    )?;
     send_solana_tx(&rpc_client, &[ix], &payer_kp)?;
     solana_deployment_root.solana_its = Some(SolanaIts {
         solana_gateway_root_config_pda: gateway_root_pda,
@@ -292,7 +299,6 @@ pub(crate) fn init_governance(
 
     Ok(())
 }
-
 
 #[tracing::instrument(skip_all)]
 pub(crate) fn init_memo_program(
