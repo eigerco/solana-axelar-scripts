@@ -61,39 +61,31 @@ unused_must_use = { level = "deny", priority = -1 }
 [workspace.dependencies]
 contract-builder = { path = "crates/contract-builder" }
 
-axelar-executable = { git = "https://github.com/eigerco/solana-axelar.git", rev = "4bb7ade" }
-gateway-event-stack = { git = "https://github.com/eigerco/solana-axelar.git", rev = "4bb7ade" }
-axelar-solana-encoding = { git = "https://github.com/eigerco/solana-axelar.git", rev = "4bb7ade" }
-axelar-solana-memo-program = { git = "https://github.com/eigerco/solana-axelar.git", rev = "4bb7ade", features = [
-    "no-entrypoint",
-] }
-axelar-solana-gateway = { git = "https://github.com/eigerco/solana-axelar.git", rev = "4bb7ade", features = [
-    "no-entrypoint",
-] }
-axelar-solana-gas-service = { git = "https://github.com/eigerco/solana-axelar.git", rev = "4bb7ade", features = [
-    "no-entrypoint",
-] }
-axelar-solana-governance = { git = "https://github.com/eigerco/solana-axelar.git", rev = "4bb7ade", features = [
-    "no-entrypoint",
-] }
-axelar-solana-gateway-test-fixtures = { git = "https://github.com/eigerco/solana-axelar.git", rev = "4bb7ade" }
-axelar-solana-its = { git = "https://github.com/eigerco/solana-axelar.git", rev = "4bb7ade" }
-evm-contracts-test-suite = { git = "https://github.com/eigerco/solana-axelar.git", rev = "4bb7ade" }
+axelar-executable = { git = "https://github.com/eigerco/solana-axelar.git", rev = "59a0f1f" }
+gateway-event-stack = { git = "https://github.com/eigerco/solana-axelar.git", rev = "59a0f1f" }
+axelar-solana-encoding = { git = "https://github.com/eigerco/solana-axelar.git", rev = "59a0f1f" }
+axelar-solana-memo-program = { git = "https://github.com/eigerco/solana-axelar.git", rev = "59a0f1f", features = ["no-entrypoint"] }
+axelar-solana-gateway = { git = "https://github.com/eigerco/solana-axelar.git", rev = "59a0f1f", features = ["no-entrypoint"] }
+axelar-solana-gas-service = { git = "https://github.com/eigerco/solana-axelar.git", rev = "59a0f1f", features = ["no-entrypoint"] }
+axelar-solana-governance = { git = "https://github.com/eigerco/solana-axelar.git", rev = "59a0f1f", features = ["no-entrypoint"] }
+axelar-solana-gateway-test-fixtures = { git = "https://github.com/eigerco/solana-axelar.git", rev = "59a0f1f" }
+axelar-solana-its = { git = "https://github.com/eigerco/solana-axelar.git", rev = "59a0f1f" }
+evm-contracts-test-suite = { git = "https://github.com/eigerco/solana-axelar.git", rev = "59a0f1f" }
 
-solana-cli-config = "2.0.1"
-solana-client = "=2.0.16"
-solana-logger = "=2.0.16"
-solana-program = "=2.0.16"
-solana-program-test = "=2.0.16"
-solana-sdk = "=2.0.16"
-solana-test-validator = "=2.0.16"
-solana-rpc-client-api = "=2.0.16"
-solana-rpc = "=2.0.16"
-solana-transaction-status = "=2.0.16"
-spl-associated-token-account = "5.0.1"
+solana-cli-config = "2.2.7"
+solana-client = "2.2.7"
+solana-logger = "2.3.1"
+solana-program = "2.2.1"
+solana-program-test = "2.2.7"
+solana-sdk = "2.2.2"
+solana-test-validator = "2.2.7"
+solana-rpc-client-api = "2.2.7"
+solana-rpc = "2.2.7"
+solana-transaction-status = "2.2.7"
+spl-associated-token-account = "6.0.0"
 spl-pod = "0.4.0"
 spl-token = "6.0.0"
-spl-token-2022 = "5.0.2"
+spl-token-2022 = "8.0.1"
 spl-token-metadata-interface = "0.5.1"
 
 rand = "0.8"
@@ -121,10 +113,3 @@ panic = "abort"
 [profile.dev]
 debug = 0
 # codegen-backend = "cranelift" (not supported on m1 mac)
-
-[patch.crates-io]
-# curve25519-dalek 3.x pin zeroize to <1.4
-# which conflicts with other dependencies requiring zeroize ^1.5.
-# We’re patching it here to unpin zeroize, using commit from a PR, see
-# https://github.com/dalek-cryptography/curve25519-dalek/pull/606
-curve25519-dalek = { git = "https://github.com/dalek-cryptography/curve25519-dalek", rev = "8274d5cbb6fc3f38cdc742b4798173895cd2a290" }
