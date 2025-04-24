@@ -42,7 +42,6 @@ impl SolanaDeploymentRoot {
         let solana_root = file_storage
             .map(|file_storage| Self::from_file(file_storage))
             .map_err(|err| eyre::Report::from(err))
-            .flatten()
             .unwrap_or_else(|err| {
                 tracing::warn!(?err, "initiallizing a new solana deployment file");
                 let axelar_config =
@@ -52,7 +51,7 @@ impl SolanaDeploymentRoot {
                     &axelar_config,
                     solana_rpc,
                 );
-                Self {
+                Ok(Self {
                     solana_configuration,
                     axelar_configuration: axelar_config,
                     voting_verifier: None,
@@ -64,8 +63,8 @@ impl SolanaDeploymentRoot {
                     gas_service: None,
                     solana_its: None,
                     governance: None,
-                }
-            });
+                })
+            })?;
         solana_root.save()?;
 
         Ok(solana_root)
@@ -242,7 +241,6 @@ pub(crate) struct Governance {
     pub(crate) minimum_proposal_eta_delay: u32,
     pub(crate) operator: Pubkey,
 }
-
 
 #[derive(Debug, Default, Clone, serde::Serialize, serde::Deserialize)]
 pub(crate) struct EvmDeployments {
